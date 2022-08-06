@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="7616f86d-4852-4557-960c-8c253987259d" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/resourceful_inventory_engineer/app.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resourceful_inventory_engineer/test.db" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTTP Private Environment File" />
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HttpClientSelectedEnvironments">
+    <file url="file://$APPLICATION_CONFIG_DIR$/scratches/generated-requests.http" environment="dev" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="29bjwWmIj5T43W5gHTlOOTrY8uC" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "C:/PWP_summer22",
+    "rest.client.default.execution.environment": "dev"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\PWP_summer22" />
+      <recent name="C:\DistributedSystem_SpeechMQ\Node3_AudioAnalyzer_Python\inventory_engineer" />
+      <recent name="C:\DistributedSystem_SpeechMQ\Node3_AudioAnalyzer_Python\relationship_meddling" />
+      <recent name="C:\DistributedSystem_SpeechMQ\Node3_AudioAnalyzer_Python\basic_class_in_modelling" />
+      <recent name="C:\DistributedSystem_SpeechMQ\Node3_AudioAnalyzer_Python" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\DistributedSystem_SpeechMQ\Node3_AudioAnalyzer_Python\relationship_meddling" />
+      <recent name="C:\DistributedSystem_SpeechMQ\Node3_AudioAnalyzer_Python\modeling_relationships" />
+      <recent name="C:\DistributedSystem_SpeechMQ\Node3_AudioAnalyzer_Python\internet_age_calcutron" />
+      <recent name="C:\DistributedSystem_SpeechMQ\Node3_AudioAnalyzer_Python\basic_class_in_modelling" />
+      <recent name="C:\DistributedSystem_SpeechMQ\Node3_AudioAnalyzer_Python\trigonometric_calcutron" />
+    </key>
+  </component>
+  <component name="RunManager" selected="HTTP Request.generated-requests | #1">
+    <configuration name="generated-requests | #1" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$APPLICATION_CONFIG_DIR$/scratches/generated-requests.http" requestIdentifier="#1" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <configuration name="generated-requests | #2" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$APPLICATION_CONFIG_DIR$/scratches/generated-requests.http" index="2" requestIdentifier="#2" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <configuration name="generated-requests | #3" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$APPLICATION_CONFIG_DIR$/scratches/generated-requests.http" index="3" requestIdentifier="#3" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <configuration name="generated-requests | #4" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$APPLICATION_CONFIG_DIR$/scratches/generated-requests.http" index="4" requestIdentifier="#4" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <configuration name="generated-requests | #5" type="HttpClient.HttpRequestRunConfigurationType" factoryName="HTTP Request" temporary="true" nameIsGenerated="true" path="$APPLICATION_CONFIG_DIR$/scratches/generated-requests.http" index="5" requestIdentifier="#5" runType="Run single request">
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="HTTP Request.generated-requests | #1" />
+        <item itemvalue="HTTP Request.generated-requests | #5" />
+        <item itemvalue="HTTP Request.generated-requests | #4" />
+        <item itemvalue="HTTP Request.generated-requests | #3" />
+        <item itemvalue="HTTP Request.generated-requests | #2" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="7616f86d-4852-4557-960c-8c253987259d" name="Changes" comment="" />
+      <created>1653388917530</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1653388917530</updated>
+      <workItem from="1653388918851" duration="106000" />
+      <workItem from="1653389231784" duration="7383000" />
+      <workItem from="1653400359754" duration="116000" />
+      <workItem from="1653400495589" duration="4213000" />
+      <workItem from="1653751873370" duration="5945000" />
+      <workItem from="1654092187586" duration="126000" />
+      <workItem from="1654689584375" duration="3187000" />
+      <workItem from="1655058769539" duration="6609000" />
+      <workItem from="1655120549931" duration="10620000" />
+      <workItem from="1659799196058" duration="2002000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
