@@ -1,0 +1,10 @@
+Your code passed the quality check with score 9.5 / 10.0.
+Problems found in the code are listed below.
+Potential problem at app, line 77. Explanation:
+No exception type(s) specified
+Potential problem at app, line 108. Explanation:
+No exception type(s) specified
+Potential problem at app, line 88. Explanation:
+Unused variable 'product'
+Potential problem at app, line 91. Explanation:
+Unused variable 'item'

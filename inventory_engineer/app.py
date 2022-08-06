@@ -1,22 +1,12 @@
-import json
-from flask import Flask, request, abort
+from flask import Flask, request, json
+from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import HTTPException
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.engine import Engine
-from sqlalchemy import event
-from django.db import IntegrityError
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
-
-class Measurement(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    sensor_id = db.Column(db.Integer, db.ForeignKey("sensor.id"))
-    value = db.Column(db.Float, nullable=False)
-    time = db.Column(db.DateTime, nullable=False)
-
-    sensor = db.relationship("Sensor", back_populates="measurements")
 
 
 class StorageItem(db.Model):
@@ -37,83 +27,98 @@ class Product(db.Model):
     in_storage = db.relationship("StorageItem", back_populates="product")
 
 
-class Sensor(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(32), nullable=False, unique=True)
-    model = db.Column(db.String(128), nullable=False)
-    location = db.Column(db.String(128), nullable=False)
-    latitude = db.Column(db.Float, nullable=True)
-    longitude = db.Column(db.Float, nullable=True)
+db.create_all()
 
-    measurements = db.relationship("Measurement", cascade="all, delete-orphan", back_populates="sensor")
 
-data = {"handle":"Handleri", "weight": 33.3, "price":3.33}
-
-@app.route("/product/add/", methods=['POST'])
+@app.route("/products/add/", methods=["POST"])
 def add_product():
     try:
-        prod_handle = request.json["handle"]
-        product = Product.query.filter_by(handle=prod_handle).first()
-        if product == None:
-            handle = str(request.json["handle"])
-            weight = float(request.json["weight"])
-            price = float(request.json["price"])
-            prod = Product(
-                handle=handle,
-                weight=weight,
-                price=price
-            )
-            db.session.add(prod)
-            db.session.commit()
-            return "PASS",201
-        else:
-            return "Handle already exists", 409
-    except (KeyError,ValueError, IntegrityError):
+        handle_value = request.json["handle"]
+        weight_value = float(request.json["weight"])
+        price_value = float(request.json["price"])
+
+        product = Product(
+            handle=handle_value,
+            weight=weight_value,
+            price=price_value
+        )
+        db.session.add(product)
+        db.session.commit()
+
+        return "{}", 201
+    except (KeyError, ValueError):
         return "Weight and price must be numbers", 400
+    except IntegrityError:
+        return "Handle already exists", 409
+    except (TypeError, OverflowError):
+        return "Request content type must be JSON", 415
 
-@app.route("/storage/<product>/add/", methods=['POST'])
+
+@app.route("/storage/<product>/add/", methods=["POST"])
 def add_to_storage(product):
+    product = Product.query.filter_by(handle=product).first()
     try:
-        prod_handle = str(product)
-        print(prod_handle)
-        product = Product.query.filter_by(handle=prod_handle).first()
-        print(product)
-        if product:
-            location = str(request.json["location"])
-            qty = int(request.json["qty"])
-            product.append() #TODO inventory
-            Inventory = Product(
-                location=location,
-                qty=qty
-            )
-            db.session.add(prod)
-            db.session.commit()
-            return "PASS",201
-        else:
-            return "Product not found", 409
-    except (KeyError,ValueError, IntegrityError):
-        return "Qty must be and integer", 400
+        location_value = request.json["location"]
+        qty_value = int(request.json["qty"])
 
-@app.route("/storage/", methods=['GET'])
+        storage_item = StorageItem(
+            product_id=product.id,
+            qty=qty_value,
+            location=location_value
+        )
+        db.session.add(storage_item)
+        db.session.commit()
+
+        return "{}", 201
+    except (KeyError, ValueError):
+        return "Qty must be an integer", 400
+    except (TypeError, OverflowError):
+        return "Request content type must be JSON", 415
+    except AttributeError:
+        return "Product not found", 404
+
+
+@app.route("/storage/", methods=["GET"])
 def get_inventory():
-    try:
-        storage = Product.query.all()
-        print(storage)
-        for product in storage:
-            print(product.handle)
-            print(product.weight)
-            print(product.price)
-            print("")
-        return "PASS",201
-    except (KeyError,ValueError, IntegrityError):
-        return "Qty must be and integer", 400
+    storage = StorageItem().query.all()
+    all_products = Product().query.all()
 
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-    cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
+    array_of_products = []
+    for [product_count, _] in enumerate(all_products):
+        product_id = all_products[product_count].id
+        array_of_items_per_product = []
+        for [item_count, _] in enumerate(storage):
+            if storage[item_count].product_id == product_id:
+                inventory_item = [
+                    storage[item_count].location,
+                    storage[item_count].qty
+                ]
+                array_of_items_per_product.append(inventory_item)
+
+        storage_dict = {
+            'handle': all_products[product_count].handle,
+            'weight': all_products[product_count].weight,
+            'price': all_products[product_count].price,
+            'inventory': array_of_items_per_product
+        }
+        array_of_products.append(storage_dict)
+
+    return json.dumps(array_of_products), 200
 
 
-
-db.create_all()
+@app.errorhandler(HTTPException)
+def handle_exception(e):
+    """Return JSON instead of HTML for HTTP errors."""
+    # start with the correct headers and status code from the error
+    response = e.get_response()
+    # replace the body with JSON
+    response.data = json.dumps({
+        "code": e.code,
+        "name": e.name,
+        "description": e.description,
+    })
+    if e.code == 405:
+        response = "POST method required", e.code
+    if e.code == 415:
+        response = "Request content must be JSON", e.code
+    return response
