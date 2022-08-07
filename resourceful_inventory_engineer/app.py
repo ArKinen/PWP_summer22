@@ -1,4 +1,4 @@
-from flask import Flask, request, json
+from flask import Flask, request, json, Response
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import HTTPException
 from flask_sqlalchemy import SQLAlchemy
@@ -73,7 +73,10 @@ class ProductCollection(Resource):
             db.session.add(product)
             db.session.commit()
 
-            return "{}", 201
+            header_dict = {
+                'Location': '/api/products/' + handle_value
+            }
+            return Response(status=201, content_type='application/json', headers=header_dict)
         except (KeyError, ValueError):
             return "Weight and price must be numbers", 400
         except IntegrityError:
