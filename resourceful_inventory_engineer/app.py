@@ -34,7 +34,8 @@ db.create_all()
 
 class ProductCollection(Resource):
 
-    def get(self):
+    @staticmethod
+    def get():
         storage = StorageItem().query.all()
         all_products = Product().query.all()
 
@@ -59,12 +60,13 @@ class ProductCollection(Resource):
 
         return array_of_products, 200
 
-    def post(self):
+    @staticmethod
+    def post():
         try:
             handle_value = request.json["handle"]
             weight_value = float(request.json["weight"])
             price_value = float(request.json["price"])
-            
+
             product = Product(
                 handle=handle_value,
                 weight=weight_value,
@@ -72,7 +74,7 @@ class ProductCollection(Resource):
             )
             db.session.add(product)
             db.session.commit()
-            
+
             header_dict = {
                 'Location': api.url_for(ProductItem, handle=product.handle)
             }
@@ -84,10 +86,12 @@ class ProductCollection(Resource):
         except (TypeError, OverflowError):
             return "Request content type must be JSON", 415
 
+
 class ProductItem(Resource):
-    
-    def get(self, handle):
+    @staticmethod
+    def get():
         return Response(status=501)
+
 
 api.add_resource(ProductCollection, "/api/products/")
 api.add_resource(ProductItem, "/api/products/<handle>/")
