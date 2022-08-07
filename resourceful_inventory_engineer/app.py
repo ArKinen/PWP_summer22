@@ -1,8 +1,9 @@
 from flask import Flask, request, json, Response
 from sqlalchemy.exc import IntegrityError
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, NotFound
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Resource, Api
+from werkzeug.routing import BaseConverter
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
@@ -76,7 +77,7 @@ class ProductCollection(Resource):
             db.session.commit()
 
             header_dict = {
-                'Location': api.url_for(ProductItem, handle=product.handle)
+                'Location': api.url_for(ProductItem, handle=product)
             }
             return Response(status=201, content_type='application/json', headers=header_dict)
         except (KeyError, ValueError):
@@ -89,12 +90,27 @@ class ProductCollection(Resource):
 
 class ProductItem(Resource):
     @staticmethod
-    def get():
+    def get(handle):
+        db_product = Product.query.filter_by(handle=handle).first()
+        if db_product is None:
+            raise NotFound
         return Response(status=501)
 
 
+class ProductConverter(BaseConverter):
+    def to_python(self, product_handle):
+        product = Product.query.filter_by(handle=product_handle).first()
+        if product is None:
+            raise NotFound
+        return product
+
+    def to_url(self, db_product):
+        return db_product.handle
+
+
 api.add_resource(ProductCollection, "/api/products/")
-api.add_resource(ProductItem, "/api/products/<handle>/")
+app.url_map.converters["product"] = ProductConverter
+api.add_resource(ProductItem, "/api/products/<product:handle>")
 
 
 @app.errorhandler(HTTPException)
