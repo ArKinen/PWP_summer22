@@ -64,7 +64,7 @@ class ProductCollection(Resource):
             handle_value = request.json["handle"]
             weight_value = float(request.json["weight"])
             price_value = float(request.json["price"])
-
+            
             product = Product(
                 handle=handle_value,
                 weight=weight_value,
@@ -72,9 +72,9 @@ class ProductCollection(Resource):
             )
             db.session.add(product)
             db.session.commit()
-
+            
             header_dict = {
-                'Location': '/api/products/' + handle_value
+                'Location': api.url_for(ProductItem, handle=product.handle)
             }
             return Response(status=201, content_type='application/json', headers=header_dict)
         except (KeyError, ValueError):
@@ -84,8 +84,13 @@ class ProductCollection(Resource):
         except (TypeError, OverflowError):
             return "Request content type must be JSON", 415
 
+class ProductItem(Resource):
+    
+    def get(self, handle):
+        return Response(status=501)
 
 api.add_resource(ProductCollection, "/api/products/")
+api.add_resource(ProductItem, "/api/products/<handle>/")
 
 
 @app.errorhandler(HTTPException)
