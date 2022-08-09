@@ -21,7 +21,6 @@ class Word(db.Model):
     
     kanji_list = db.relationship("Kanji", secondary=word_components, back_populates="words")
     
-    @staticmethod
     def serialize(self, short_form=False):
         doc = {
             "written": self.written,
@@ -29,19 +28,20 @@ class Word(db.Model):
             "meaning": self.meaning
         }
         if not short_form:
-        kanji_list_items = []
-        for [kanji, _] in enumerate(kanji_list):
-            kanji_item = {
-                        "kanji": self.kanji,
-                        "meaning": self.meaning
-                        }
-            kanji_list_items.append(kanji_item)
-        doc = {
-            "written" = self.written,
-            "reading" = self.reading,
-            "meaning" = self.meaning,
-            "kanji_list" = kanji_list_items
-            }
+            kanji_list_items = []
+            for [kanji, _] in enumerate(self.kanji_list):
+                kanji_item = {
+                            "kanji": self.kanji_list[kanji].kanji,
+                            "meaning": self.kanji_list[kanji].meaning
+                            }
+                kanji_list_items.append(kanji_item)
+            doc = {
+                "written": self.written,
+                "reading": self.reading,
+                "meaning": self.meaning,
+                "kanji_list": kanji_list_items
+                }
+                
         return doc 
     
     
@@ -56,22 +56,22 @@ class Kanji(db.Model):
     
     words = db.relationship("Word", secondary=word_components, back_populates="kanji_list")
     
-    @staticmethod
     def serialize(self, short_form=False):
         doc = {
             "kanji": self.kanji,
             "meaning": self.meaning
         }
         if not short_form:
-        doc = {
-            "kanji" = self.kanji,
-            "meaning" = self.meaning,
-            "kunyomi" = self.kunyomi,
-            "onyomi" = self.onyomi,
-            "strokes" = self.strokes
-            }
+            doc = {
+                "kanji": self.kanji,
+                "meaning": self.meaning,
+                "kunyomi": self.kunyomi,
+                "onyomi": self.onyomi,
+                "strokes": self.strokes
+                }
+                
+                
         return doc 
-
 
 def populate_db():
     k1 = Kanji(
@@ -96,4 +96,5 @@ def populate_db():
     word.kanji_list.append(k2)
     db.session.add(word)
     db.session.commit()
-    
+
+
