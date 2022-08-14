@@ -6,7 +6,6 @@ from sqlalchemy import event
 from werkzeug.exceptions import HTTPException, NotFound, UnsupportedMediaType, BadRequest, Conflict
 from flask_restful import Resource, Api
 from werkzeug.routing import BaseConverter
-#from flask_caching import Cache
 from jsonschema import validate, ValidationError, draft7_format_checker
 import datetime
 
@@ -14,11 +13,8 @@ import datetime
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-#app.config["CACHE_TYPE"] = "FileSystemCache"
-#app.config["CACHE_DIR"] = "cache"
 db = SQLAlchemy(app)
 api = Api(app)
-#cache = Cache(app)
 
 deployments = db.Table("deployments",
                        db.Column("deployment_id", db.Integer, db.ForeignKey("deployment.id"), primary_key=True),
@@ -76,14 +72,6 @@ class Sensor(db.Model):
             "description": "Name of the sensor's model",
             "type": "string"
         }
-        props["id"] = {
-            "description": "Sensor id number",
-            "type": "integer"
-        }
-        props["location_id"] = {
-            "description": "Sensor location id number",
-            "type": "integer"
-        }
         return schema
 
 
@@ -113,16 +101,8 @@ class Measurement(db.Model):
             "type": "string"
         }
         props["value"] = {
-            "description": "Measurement result as a float",
-            "type": "string"
-        }
-        props["id"] = {
-            "description": "Measurement id number",
-            "type": "integer"
-        }
-        props["sensor_id"] = {
-            "description": "Sensor's id number",
-            "type": "integer"
+            "description": "Measurement result as a number",
+            "type": "number"
         }
         return schema
 
@@ -211,45 +191,21 @@ class SensorConverter(BaseConverter):
 
 class MeasurementCollection(Resource):
 
-    #def page_key(*args, **kwargs):
-    #    page = request.args.get("page", 0)
-    #    return request.path + f"[page_{page}]"
-    #
-    #PAGE_SIZE = 50
-    #
-    #@cache.cached(timeout=None, make_cache_key=page_key)
-    #def get(self, sensor):
-    #    db_sensor = Sensor.query.filter_by(name=sensor).first()
-    #    if db_sensor is None:
-    #        raise NotFound
-    #    page = request.args.get("page", 0)
-    #    remaining = Measurement.query.filter_by(
-    #        sensor=db_sensor
-    #    ).order_by("time").offset(page * self.PAGE_SIZE)
-    #    body = {
-    #        "sensor": db_sensor.name,
-    #        "measurements": []
-    #    }
-    #    for meas in remaining.limit(self.PAGE_SIZE):
-    #        body["measurements"].append(
-    #            {
-    #                "value": meas.value,
-    #                "time": meas.time.isoformat()
-    #            }
-    #        )
-    #    return Response(json.dumps(body), 200, mimetype=JSON)
-
     def post(self, sensor):
         if not request.json:
             raise UnsupportedMediaType
         try:
-            validate(request.json, Meas.json_schema())
+            validate(request.json, Measurement.json_schema())
         except ValidationError as e:
             raise BadRequest(description=str(e))
         sensor.measurements.append(request.json)
         db.session.add(sensor)
         db.session.commit()
-        return 201
+        location = MeasurementConverter.to_python(self, request.json["sensor"])
+        header_dict = {
+            'Location': MeasurementConverter.to_url(self, location.location)
+        }
+        return Response(status=201, content_type='application/json', headers=header_dict)
 
 
 class MeasurementItem(Resource):
@@ -259,22 +215,22 @@ class MeasurementItem(Resource):
 
 
 class MeasurementConverter(BaseConverter):
-    def to_python(self: Measurement, sensor_id_value):
+    def to_python(self, sensor_id_value):
         db_measurement = self.query.filter_by(sensor_id=sensor_id_value).first()
         if db_measurement is None:
             raise NotFound
         return db_measurement
 
-    def to_url(self, db_measurement: Measurement):
-        return db_measurement.name
+    def to_url(self, db_measurement):
+        return str(db_measurement.sensor_id)
 
 
-api.add_resource(SensorCollection, "/api/sensors/")
 app.url_map.converters["sensor"] = SensorConverter
+api.add_resource(SensorCollection, "/api/sensors/")
 api.add_resource(SensorItem, "/api/sensors/<sensor:sensor>/")
 
-api.add_resource(MeasurementCollection, "/api/sensors/<sensor:sensor>/measurements/")
 app.url_map.converters["measurement"] = MeasurementConverter
+api.add_resource(MeasurementCollection, "/api/sensors/<sensor:sensor>/measurements/")
 api.add_resource(MeasurementItem, "/api/sensors/<sensor:sensor>/measurements/<measurement:measurement>/")
 
 
