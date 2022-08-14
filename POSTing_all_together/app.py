@@ -1,6 +1,6 @@
 import datetime
+from wsgiref.validate import validator
 
-import jsonschema.validators
 from flask import Flask, request, json, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError, StatementError
@@ -9,7 +9,8 @@ from sqlalchemy import event
 from werkzeug.exceptions import HTTPException, NotFound, UnsupportedMediaType, BadRequest, Conflict
 from flask_restful import Resource, Api
 from werkzeug.routing import BaseConverter
-# from flask_caching import Cache
+# from flask_caching import Cachef
+from rfc3339_validator import validate_rfc3339
 from jsonschema import validate, ValidationError, draft7_format_checker
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
@@ -97,13 +98,9 @@ class Measurement(db.Model):
     sensor = db.relationship("Sensor", back_populates="measurements")
 
     def deserialize(self, doc):
-        try:
-            print()
-            self.time = datetime.datetime.fromisoformat(doc["time"])
-            self.value = doc["value"]
-            self.sensor = doc.get("sensor")
-        except (KeyError, ValueError):
-            return "Attributes must be numbers", 400
+        self.time = datetime.datetime.fromisoformat(doc["time"])
+        self.value = doc["value"]
+        self.sensor = doc.get("sensor")
 
     @staticmethod
     def json_schema():
@@ -119,14 +116,6 @@ class Measurement(db.Model):
         }
         props["value"] = {
             "description": "Measurement result as a float",
-            "type": "number"
-        }
-        props["id"] = {
-            "description": "Measurement id number",
-            "type": "number"
-        }
-        props["sensor_id"] = {
-            "description": "Sensor's id number",
             "type": "number"
         }
         return schema
@@ -161,18 +150,17 @@ class SensorCollection(Resource):
             )
             db.session.add(sensor)
             db.session.commit()
+        except ValueError as e:
+            raise BadRequest(description=str(e))
+        except ValidationError as e:
+            raise BadRequest(description=str(e))
+        except StatementError as e:
+            raise BadRequest(description=str(e))
 
-            header_dict = {
-                'Location': api.url_for(SensorItem, sensor=sensor)
-            }
-            return Response(status=201, content_type='application/json', headers=header_dict)
-
-        except (KeyError, ValueError):
-            return "Attributes must be numbers", 400
-        except IntegrityError:
-            return "Name already exists", 409
-        except (TypeError, OverflowError):
-            return "Request content type must be JSON", 415
+        header_dict = {
+            'Location': api.url_for(SensorItem, sensor=sensor)
+        }
+        return Response(status=201, content_type='text/html', headers=header_dict)
 
 
 class SensorItem(Resource):
@@ -268,15 +256,16 @@ class MeasurementCollection(Resource):
             db.session.add(sensor)
             db.session.commit()
 
-            header_dict = {
-                'Location': api.url_for(MeasurementItem, sensor=sensor, measurement=measurement.sensor_id)
-            }
-
-            return Response(status=201, content_type='application/json', headers=header_dict)
+        except ValueError as e:
+            raise BadRequest(description=str(e))
         except ValidationError as e:
             raise BadRequest(description=str(e))
-        except StatementError as e:
-            raise BadRequest(description=str(e))
+
+        header_dict = {
+            'Location': api.url_for(MeasurementItem, sensor=sensor, measurement=measurement.id)
+        }
+
+        return Response(status=201, content_type='text/html', headers=header_dict)
 
 
 class MeasurementItem(Resource):
@@ -316,6 +305,8 @@ def handle_exception(e):
         "name": e.name,
         "description": e.description,
     })
+    if e.code == 400:
+        response = "test", e.code
     if e.code == 405:
         response = "POST method required", e.code
     if e.code == 415:
