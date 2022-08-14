@@ -114,7 +114,8 @@ class Measurement(db.Model):
         props = schema["properties"] = {}
         props["time"] = {
             "description": "Time the sensor measured the value",
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
         }
         props["value"] = {
             "description": "Measurement result as a float",
