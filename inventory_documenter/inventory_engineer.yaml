@@ -1,0 +1,112 @@
+openapi: 3.0.3
+info:
+  title: InventoryEngineer Example
+  version: 0.0.1
+  description: |
+    This is an API example used in the Programmable Web Project course.
+    It stores data about sensors and where they have been deployed.
+  termsOfService: http://totally.not.placehold.er/
+  contact:
+    url: http://totally.not.placehold.er/
+    email: mihamaki2@student.oulu.fi
+    name: Mika Ihamäki
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- url: /api
+paths:
+  /products/:
+    get:
+      description: Get the list of managed products
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              example:
+              - handle: test-product-1
+                weight: 1.0
+                price: 1.0
+              - handle: test-product-2
+                weight: 2.0
+                price: 2.0
+    post:
+      description: Create a new product
+      responses:
+        '201':
+          description: The product was created successfully
+          headers:
+            Location:
+              description: URI of the new product
+              schema:
+                type: string
+        '400':
+          description: Weight and price must be numbers
+        '409':
+          description: Handle already exists
+        '415':
+          description: Request content type must be JSON
+      requestBody:
+        description: JSON document that contains basic data for a new product
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+            example:
+              handle: test-product-1
+              weight: 1.01
+              price: 1.02
+  /products/{handle}/:
+    parameters:
+      - $ref: '#/components/parameters/product'
+    get:
+      description: Get details of one product
+      responses:
+        '200':
+          description: Data of single product with extended location info
+          content:
+            application/json:
+              examples:
+                deployed-product:
+                  description: A product that has been placed into a location
+                  value:
+                    handle: test-product-1
+                    weight: 1.0
+                    price: 1.0
+                    inventory:
+                      product_id: 1
+                      location: "test"
+                      qty: 5
+                      description: in some market
+                stored-product:
+                  description: A product that lies in the storage, currently unused
+                  value:
+                    name: test-sensor-2
+                    model: uo-test-sensor
+                    inventory: null
+        '404':
+          description: The product was not found
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        handle:
+          description: Time the sensor measured the value
+          type: string
+        price:
+          description: Price as a float
+          type: number
+        weight:
+          description: Weight as a float
+          type: number
+      required:
+      - handle
+      - weight
+      - price
+  securitySchemes:
+      sensorhubKey:
+        type: apiKey
+        name: inventory_engineer-Api-Key
+        in: header

@@ -29,11 +29,52 @@ class Product(db.Model):
 
     in_storage = db.relationship("StorageItem", back_populates="product")
 
+    @staticmethod
+    def json_schema():
+        schema = {
+            "type": "object",
+            "required": ["handle", "weight", "price"]
+        }
+        props = schema["properties"] = {}
+        props["handle"] = {
+            "description": "Time the sensor measured the value",
+            "type": "string"
+        }
+        props["weight"] = {
+            "description": "Weight as a float",
+            "type": "number"
+        }
+        props["price"] = {
+            "description": "Price as a float",
+            "type": "number"
+        }
+        return schema
+
 
 db.create_all()
 
 
 class ProductCollection(Resource):
+    @staticmethod
+    def json_schema():
+        schema = {
+            "type": "object",
+            "required": ["handle", "weight", "price"]
+        }
+        props = schema["properties"] = {}
+        props["handle"] = {
+            "description": "Time the sensor measured the value",
+            "type": "string"
+        }
+        props["weight"] = {
+            "description": "Weight as a float",
+            "type": "number"
+        }
+        props["price"] = {
+            "description": "Price as a float",
+            "type": "number"
+        }
+        return schema
 
     @staticmethod
     def get():
