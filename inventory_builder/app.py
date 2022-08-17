@@ -1,3 +1,4 @@
+import typing as t
 from flask import Flask, request, json, Response
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import HTTPException, NotFound
@@ -144,14 +145,14 @@ class ProductItem(Resource):
 
 
 class ProductConverter(BaseConverter):
-    def to_python(self, product_handle):
-        product = Product.query.filter_by(handle=product_handle).first()
-        if product is None:
+    def to_python(self, value: str) -> t.Any:
+        db_product = Product.query.filter_by(handle=value).first()
+        if db_product is None:
             raise NotFound
-        return product
+        return db_product
 
-    def to_url(self, db_product):
-        return db_product.handle
+    def to_url(self, value: t.Any) -> str:
+        return value.handle
 
 
 class MasonBuilder(dict):
