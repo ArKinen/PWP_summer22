@@ -2,26 +2,16 @@ import requests
 
 API_URL = "https://pwpcourse.eu.pythonanywhere.com"
 
-
 def room_info(body, south, north):
-    #print(f"BODY:{body}")
     if body["content"] == None:
         if south == 0:
             try:
-                #print(f"SOUTH: {body['@controls']['maze:south']["href"]}")
                 return body['@controls']['maze:south']["href"], 0,0,0
-            #elif body["@controls"]["maze:east"]:
-            #    #print(f"SOUTH: {body['@controls']['maze:east']["href"]}")
-            #    return body['@controls']['maze:east']
-            #elif body["@controls"]["maze:north"]:
-            #    #print(f"SOUTH: {body['@controls']['maze:north']["href"]}")
-            #return body['@controls']['maze:north']
             except:
                 print(f"FOUND {body['content']} FROM: {body['handle']} CTRLs:{body['@controls']}")
                 return body['@controls']['maze:east']["href"], 1,0,0
         if north == 0:
             try:
-                #print(f"SOUTH: {body['@controls']['maze:south']["href"]}")
                 return body['@controls']['maze:north']["href"], 1,0,0
             except:
                 print(f"FOUND {body['content']} FROM: {body['handle']} CTRLs:{body['@controls']}")
