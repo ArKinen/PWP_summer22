@@ -452,7 +452,7 @@ def fill_in_the_required_values(s, ctrl, schema):
     required_props = schema["required"]
     for props in required_props:
         value_from_user = input(f"{schema['properties'][props]['description']}:")
-        if type(value_from_user) != schema["properties"][props]["type"]:
+        if str(type(value_from_user)) != str(schema["properties"][props]["type"]):
             if schema["properties"][props]["type"] == "number":
                 value_from_user = float(value_from_user)
             elif schema["properties"][props]["type"] == "integer":
@@ -469,7 +469,7 @@ def prompt_from_schema(s, ctrl):
     2. if schema is None, fetch schema using "schemaUrl"???
     """
     schema = ctrl["schema"]
-    if schema =! None:
+    if schema is not None:
         fill_in_the_required_values(s, ctrl, schema)
     else:
         print("SchemaUrL?")
