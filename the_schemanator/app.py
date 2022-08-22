@@ -442,6 +442,38 @@ def submit_data(s, ctrl, data):
     )
     return resp
 
+def fill_in_the_required_values(s, ctrl, schema):
+    """
+     1. Get required properties from schema
+     2. Ask required properties from used by for looping required properties
+     3. Convert value from user to required types
+     4. Save value to ctrl object and submit data
+    """
+    required_props = schema["required"]
+    for props in required_props:
+        value_from_user = input(f"{schema['properties'][props]['description']}:")
+        if type(value_from_user) != schema["properties"][props]["type"]:
+            if schema["properties"][props]["type"] == "number":
+                value_from_user = float(value_from_user)
+            elif schema["properties"][props]["type"] == "integer":
+                value_from_user = int(value_from_user)
+            else:
+                value_from_user = str(value_from_user)
+        ctrl["properties"][props] = value_from_user
+
+    submit_data(s, ctrl, value_from_user)
+
+def prompt_from_schema(s, ctrl):
+    """
+    1. Fetch Schema from ctrl object
+    2. if schema is None, fetch schema using "schemaUrl"???
+    """
+    schema = ctrl["schema"]
+    if schema =! None:
+        fill_in_the_required_values(s, ctrl, schema)
+    else:
+        print("SchemaUrL?")
+
 app.register_blueprint(api_bp)
 
 api.add_resource(SensorCollection, "/sensors/")
