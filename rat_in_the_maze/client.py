@@ -22,7 +22,6 @@ def room_info(body, south, north):
         return None,1,1,1
 
 def main():
-    row_done_flag = 0
     with requests.Session() as s:
         s.headers.update({"Accept": "application/vnd.mason+json"})
         resp = s.get(API_URL + "/api/")
@@ -37,7 +36,6 @@ def main():
             north = 0
             exit = 0
             while exit == 0:
-                #while (south == 0) and (exit == 0):
                 next_room_href,south, north, exit = room_info(body, south, north)
                 resp = s.get(API_URL + next_room_href)
                 body = resp.json()
