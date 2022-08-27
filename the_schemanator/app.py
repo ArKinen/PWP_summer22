@@ -436,7 +436,8 @@ class MeasurementCollection(Resource):
 def submit_data(s, ctrl, data):
     resp = s.request(
         ctrl["method"],
-        API_URL + ctrl["href"], #TODO: API_URL removed before Lovelace
+        #API_URL + ctrl["href"], #TODO: API_URL removed before Lovelace
+        ctrl["href"],           #TODO: Use this in Lovelace
         data=json.dumps(data),
         headers = {"Content-type": "application/json"}
     )
@@ -459,7 +460,7 @@ def fill_in_the_required_values(s, ctrl, schema):
                 value_from_user = int(value_from_user)
             else:
                 value_from_user = str(value_from_user)
-        ctrl["properties"][props] = value_from_user
+        schema["properties"][props] = value_from_user
 
     submit_data(s, ctrl, value_from_user)
 
