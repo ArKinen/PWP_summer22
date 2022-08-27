@@ -1,5 +1,6 @@
 import click
 import json
+import requests
 from flask import Flask, Blueprint, Response, request
 from flask.cli import with_appcontext
 from flask_sqlalchemy import SQLAlchemy
@@ -436,8 +437,8 @@ class MeasurementCollection(Resource):
 def submit_data(s, ctrl, data):
     resp = s.request(
         ctrl["method"],
-        #API_URL + ctrl["href"], #TODO: API_URL removed before Lovelace
-        ctrl["href"],           #TODO: Use this in Lovelace
+        API_URL + ctrl["href"],  #TODO: API_URL removed before Lovelace
+        #ctrl["href"],           #TODO: Use this in Lovelace
         data=json.dumps(data),
         headers = {"Content-type": "application/json"}
     )
@@ -450,6 +451,7 @@ def fill_in_the_required_values(s, ctrl, schema):
      3. Convert value from user to required types
      4. Save value to ctrl object and submit data
     """
+    data = []
     required_props = schema["required"]
     for props in required_props:
         value_from_user = input(f"{schema['properties'][props]['description']}:")
@@ -460,20 +462,25 @@ def fill_in_the_required_values(s, ctrl, schema):
                 value_from_user = int(value_from_user)
             else:
                 value_from_user = str(value_from_user)
-        schema["properties"][props] = value_from_user
+        data[props] = value_from_user
+        #data = schema                                 #TODO: to get more output from lovelace
+        #schema["properties"][props] = value_from_user #TODO: to get more output from lovelace
 
-    submit_data(s, ctrl, value_from_user)
+    submit_data(s, ctrl, data)
 
 def prompt_from_schema(s, ctrl):
     """
     1. Fetch Schema from ctrl object
     2. if schema is None, fetch schema using "schemaUrl"???
     """
-    schema = ctrl["schema"]
-    if schema is not None:
+    try:
+        schema = ctrl["schema"]
         fill_in_the_required_values(s, ctrl, schema)
-    else:
-        print("SchemaUrL?")
+    except:
+        schemaUrlResp = s.get(ctrl["schemaUrl"])
+        schemaRespJson =schemaUrlResp.json()
+        schema = schemaRespJson["@controls"]["schema"]
+        fill_in_the_required_values(s, ctrl, schema)
 
 app.register_blueprint(api_bp)
 
@@ -523,3 +530,10 @@ def generate_test_data():
 
 app.cli.add_command(init_db_command)
 app.cli.add_command(generate_test_data)
+
+if __name__ == "__main__":
+    API_URL = "http://localhost:5000"
+    with requests.Session() as s:
+        resp = s.get(API_URL + "/api/sensors/")
+        body = resp.json()
+        prompt_from_schema(s, body["@controls"]["senhub:add-sensor"])
