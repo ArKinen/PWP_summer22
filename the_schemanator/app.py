@@ -437,8 +437,8 @@ class MeasurementCollection(Resource):
 def submit_data(s, ctrl, data):
     resp = s.request(
         ctrl["method"],
-        API_URL + ctrl["href"],  #TODO: API_URL removed before Lovelace
-        #ctrl["href"],           #TODO: Use this in Lovelace
+        #API_URL + ctrl["href"],  #TODO: API_URL removed before Lovelace
+        ctrl["href"],           #TODO: Use this in Lovelace
         data=json.dumps(data),
         headers = {"Content-type": "application/json"}
     )
@@ -451,7 +451,7 @@ def fill_in_the_required_values(s, ctrl, schema):
      3. Convert value from user to required types
      4. Save value to ctrl object and submit data
     """
-    data = []
+    data = {}
     required_props = schema["required"]
     for props in required_props:
         value_from_user = input(f"{schema['properties'][props]['description']}:")
@@ -463,8 +463,6 @@ def fill_in_the_required_values(s, ctrl, schema):
             else:
                 value_from_user = str(value_from_user)
         data[props] = value_from_user
-        #data = schema                                 #TODO: to get more output from lovelace
-        #schema["properties"][props] = value_from_user #TODO: to get more output from lovelace
 
     submit_data(s, ctrl, data)
 
@@ -477,9 +475,9 @@ def prompt_from_schema(s, ctrl):
         schema = ctrl["schema"]
         fill_in_the_required_values(s, ctrl, schema)
     except:
-        schemaUrlResp = s.get(ctrl["schemaUrl"])
-        schemaRespJson =schemaUrlResp.json()
-        schema = schemaRespJson["@controls"]["schema"]
+        schema_url_resp = s.get(ctrl["schemaUrl"])
+        schema_resp_json =schema_url_resp.json()
+        schema = schema_resp_json
         fill_in_the_required_values(s, ctrl, schema)
 
 app.register_blueprint(api_bp)
