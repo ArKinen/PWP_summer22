@@ -1,5 +1,3 @@
-"use strict";
-
 const DEBUG = true;
 const MASONJSON = "application/vnd.mason+json";
 const PLAINJSON = "application/json";
@@ -144,18 +142,28 @@ function renderMeasurements(body) {
 
 
  */
-    $("div.tablecontrols").empty();
+    $("div.form").empty();
+    //$("div.tablecontrols").empty();
     $(".resulttable thead").html(
-
+"<tr><th>Time</th><th>Value</th></tr>"
     );
     let tbody = $(".resulttable tbody");
     tbody.empty();
-    console.log(body)
+    //console.log(body)
     getResource(body["@controls"].self.href)
     //body["@controls"]
     body.items.forEach(function (item) {
         console.log(item)
-        //tbody.append(sensorRow(item));
+        tbody.append(measurementRow(item));
     });
+}
 
+function measurementRow(item) {
+    //let link = "<a href='" +
+      //          item["@controls"].self.href +
+        //        "' onClick='followLink(event, this, renderSensor)'>prev</a>";
+
+    return "<tr><td>" + item.time +
+            "</td><td>" + item.value +
+            "</td></tr>";
 }
