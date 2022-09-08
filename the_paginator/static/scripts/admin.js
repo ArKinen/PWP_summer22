@@ -129,39 +129,38 @@ $(document).ready(function () {
 });
 
 function renderMeasurements(body) {
-/*
-    $("div.navigation")
-        .html(
-        "<a href='" +
-        body["@controls"].prev.href +
-        "' onClick='followLink(event, this, renderSensors)'>Collection</a>" +
-            "<a href='" +
-        body["@controls"].next.href +
-        "' onClick='followLink(event, this, renderMeasurements)'> Measurements</a>"
-        )
 
-
- */
     $("div.form").empty();
-    //$("div.tablecontrols").empty();
     $(".resulttable thead").html(
 "<tr><th>Time</th><th>Value</th></tr>"
     );
+
+    let val = $("div.navigation").empty()
+        .html(
+        "<a href='" + body["@controls"]["up"].href +
+        "' onClick='followLink(event, this, renderSensor)'>Collection</a>" +
+            "<a href='" + body["@controls"].self.href +
+        "' onClick='followLink(event, this, renderMeasurements)'> Measurements</a>"
+        )
+
+    if (body["@controls"]["prev"]){
+        val.append("<a href='" + body["@controls"]["prev"].href +
+        "' onClick='followLink(event, this, renderMeasurements)'><tr></tr> Prev</a>")
+    }
+    if (body["@controls"]["next"]){
+        val.append("<a href='" + body["@controls"]["next"].href +
+        "' onClick='followLink(event, this, renderMeasurements)'><tr></tr> Next</a>")
+    }
+
     let tbody = $(".resulttable tbody");
     tbody.empty();
-    //console.log(body)
     getResource(body["@controls"].self.href)
-    //body["@controls"]
     body.items.forEach(function (item) {
-        console.log(item)
         tbody.append(measurementRow(item));
     });
 }
 
 function measurementRow(item) {
-    //let link = "<a href='" +
-      //          item["@controls"].self.href +
-        //        "' onClick='followLink(event, this, renderSensor)'>prev</a>";
 
     return "<tr><td>" + item.time +
             "</td><td>" + item.value +
