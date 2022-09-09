@@ -92,7 +92,7 @@ function renderSensor(body) {
         .html(
         "<a href='" +
         body["@controls"].collection.href +
-        "' onClick='followLink(event, this, renderSensors)'>Collection</a>" +
+        "' onClick='followLink(event, this, renderSensors)'>Collection</a>" + " | " +
             "<a href='" +
         body["@controls"]["senhub:measurements-first"].href +
         "' onClick='followLink(event, this, renderMeasurements)'> Measurements</a>"
@@ -138,14 +138,14 @@ function renderMeasurements(body) {
     let val = $("div.navigation").empty()
         .html(
         "<a href='" + body["@controls"]["up"].href +
-        "' onClick='followLink(event, this, renderSensor)'>Collection</a>" +
+        "' onClick='followLink(event, this, renderSensor)'>Collection</a>" + " | " +
             "<a href='" + body["@controls"].self.href +
-        "' onClick='followLink(event, this, renderMeasurements)'> Measurements</a>"
+        "' onClick='followLink(event, this, renderMeasurements)'> Measurements</a>" + "<br>"
         )
 
     if (body["@controls"]["prev"]){
         val.append("<a href='" + body["@controls"]["prev"].href +
-        "' onClick='followLink(event, this, renderMeasurements)'><tr></tr> Prev</a>")
+        "' onClick='followLink(event, this, renderMeasurements)'><tr></tr> Prev</a>" + " | ")
     }
     if (body["@controls"]["next"]){
         val.append("<a href='" + body["@controls"]["next"].href +
