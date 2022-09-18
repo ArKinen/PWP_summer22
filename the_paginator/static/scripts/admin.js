@@ -97,6 +97,7 @@ function renderSensor(body) {
         body["@controls"]["senhub:measurements-first"].href +
         "' onClick='followLink(event, this, renderMeasurements)'> Measurements</a>"
         )
+    let val = $("div.tablecontrols").empty() //ARKI
 
     $(".resulttable thead").empty();
     $(".resulttable tbody").empty();
@@ -135,7 +136,7 @@ function renderMeasurements(body) {
 "<tr><th>Time</th><th>Value</th></tr>"
     );
 
-    let val = $("div.tablecontrols").empty()
+    //let val1 = $('div.navigation').empty()
     //    .html(
     //    "<a href='" + body["@controls"]["up"].href +
     //    "' onClick='followLink(event, this, renderSensor)'>Collection</a>" + " | " +
@@ -143,14 +144,30 @@ function renderMeasurements(body) {
     //    "' onClick='followLink(event, this, renderMeasurements)'> Measurements</a>" + "<br>"
     //    )
 
-    if (body["@controls"]["prev"]){
-        val.append("<a href='" + body["@controls"]["prev"].href +
-        "' onClick='followLink(event, this, renderMeasurements)'><tr></tr> Prev</a>" + " | ")
-    }
-    if (body["@controls"]["next"]){
-        val.append("<a href='" + body["@controls"]["next"].href +
-        "' onClick='followLink(event, this, renderMeasurements)'><tr></tr> Next</a>")
-    }
+    $("div.navigation")
+        .html(
+        "<a href='" + body["@controls"]["up"].href +
+        "' onClick='followLink(event, this, renderSensor)'>Collection</a>" + " | " +
+            "<a href='" + body["@controls"].self.href +
+        "' onClick='followLink(event, this, renderMeasurements)'> Measurements</a>" + "<br>"
+        )
+
+    let val = $("div.tablecontrols").empty()
+        //.html(
+        //"<a href='" + body["@controls"]["up"].href +
+        //"' onClick='followLink(event, this, renderSensor)'>Collection</a>" + " | " +
+        //    "<a href='" + body["@controls"].self.href +
+        //"' onClick='followLink(event, this, renderMeasurements)'> Measurements</a>" + "<br>"
+        //)
+
+        if (body["@controls"]["prev"]){
+            val.append("<a href='" + body["@controls"]["prev"].href +
+            "' onClick='followLink(event, this, renderMeasurements)'><tr></tr> Prev</a>" + " | ")
+        }
+        if (body["@controls"]["next"]){
+            val.append("<a href='" + body["@controls"]["next"].href +
+            "' onClick='followLink(event, this, renderMeasurements)'><tr></tr> Next</a>")
+        }
 
     let tbody = $(".resulttable tbody");
     tbody.empty();
