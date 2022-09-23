@@ -1,4 +1,3 @@
-const DEBUG = true;
 const MASONJSON = "application/vnd.mason+json";
 const PLAINJSON = "application/json";
 
@@ -95,9 +94,10 @@ function renderSensor(body) {
         "' onClick='followLink(event, this, renderSensors)'>Collection</a>" + " | " +
             "<a href='" +
         body["@controls"]["senhub:measurements-first"].href +
-        "' onClick='followLink(event, this, renderMeasurements)'> Measurements</a>"
+        "' onClick='followLink(event, this, renderMeasurements)'>Measurements</a>"
         )
-    let val = $("div.tablecontrols").empty() //ARKI
+
+    $("div.tablecontrols").empty() //ARKI
 
     $(".resulttable thead").empty();
     $(".resulttable tbody").empty();
@@ -125,24 +125,12 @@ function renderSensors(body) {
     renderSensorForm(body["@controls"]["senhub:add-sensor"]);
 }
 
-$(document).ready(function () {
-    getResource("http://localhost:5000/api/sensors/", renderSensors);
-});
-
 function renderMeasurements(body) {
 
     $("div.form").empty();
     $(".resulttable thead").html(
 "<tr><th>Time</th><th>Value</th></tr>"
     );
-
-    //let val1 = $('div.navigation').empty()
-    //    .html(
-    //    "<a href='" + body["@controls"]["up"].href +
-    //    "' onClick='followLink(event, this, renderSensor)'>Collection</a>" + " | " +
-    //        "<a href='" + body["@controls"].self.href +
-    //    "' onClick='followLink(event, this, renderMeasurements)'> Measurements</a>" + "<br>"
-    //    )
 
     $("div.navigation")
         .html(
@@ -153,33 +141,26 @@ function renderMeasurements(body) {
         )
 
     let val = $("div.tablecontrols").empty()
-        //.html(
-        //"<a href='" + body["@controls"]["up"].href +
-        //"' onClick='followLink(event, this, renderSensor)'>Collection</a>" + " | " +
-        //    "<a href='" + body["@controls"].self.href +
-        //"' onClick='followLink(event, this, renderMeasurements)'> Measurements</a>" + "<br>"
-        //)
 
-        if (body["@controls"]["prev"]){
-            val.append("<a href='" + body["@controls"]["prev"].href +
-            "' onClick='followLink(event, this, renderMeasurements)'><tr></tr> Prev</a>" + " | ")
-        }
-        if (body["@controls"]["next"]){
-            val.append("<a href='" + body["@controls"]["next"].href +
-            "' onClick='followLink(event, this, renderMeasurements)'><tr></tr> Next</a>")
-        }
+    if (body["@controls"]["prev"]){
+        val.append("<a href='" + body["@controls"]["prev"].href +
+        "' onClick='followLink(event, this, renderMeasurements)'><tr></tr> Prev</a>" + " | ")
+    }
+    if (body["@controls"]["next"]){
+        val.append("<a href='" + body["@controls"]["next"].href +
+        "' onClick='followLink(event, this, renderMeasurements)'><tr></tr> Next</a>")
+    }
 
     let tbody = $(".resulttable tbody");
     tbody.empty();
     getResource(body["@controls"].self.href)
     body.items.forEach(function (item) {
-        tbody.append(measurementRow(item));
+        tbody.append("<tr><td>" + item.time +
+            "</td><td>" + item.value +
+            "</td></tr>");
     });
 }
 
-function measurementRow(item) {
-
-    return "<tr><td>" + item.time +
-            "</td><td>" + item.value +
-            "</td></tr>";
-}
+$(document).ready(function () {
+    getResource("http://localhost:5000/api/sensors/", renderSensors);
+});
