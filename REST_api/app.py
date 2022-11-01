@@ -12,14 +12,18 @@ db = SQLAlchemy(app)
 class RecipeCategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
+
 class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
 
 class Compartment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
+
 class Ingredient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
 
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
