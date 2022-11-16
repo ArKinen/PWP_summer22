@@ -5,6 +5,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy import event
 from werkzeug.exceptions import HTTPException
 from flask_sqlalchemy import SQLAlchemy
+import random
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
@@ -36,7 +37,8 @@ class RecipeCategory(db.Model):
 
 class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    ingredient = db.Column(db.String(16), nullable=False, unique=True)
+    title = db.Column(db.String(16), nullable=False, unique=True)
+    ingredient = db.Column(db.String(160), nullable=False, unique=True)
     compartments = db.relationship("Compartment", secondary=recipes, back_populates="recipes")
 
 
@@ -71,16 +73,27 @@ class Location(db.Model):
 def init_db_command():
     db.create_all()
 
-
 @click.command("testgen")
 @with_appcontext
 def generate_test_data():
-    r = Recipe(
-        ingredient="chicken leg"
-    )
+    db.session.rollback()
+    recipe_ingredients = ["Chicken leg", "Mashed potatoes", "Ketchup", "Rice", "Minced meat", "Kebab"]
+    recipes = ["Mac and Cheese", "Chicken and Potatoes", "Rice and Kebab"]
+    for recipe in range(0, len(recipes)):
+        used_recipe_ingredients = ""
+        for i in range(0, 2):
+            random_number = random.randint(0, (len(recipe_ingredients)-1))
+            print(f"Join ingredient- {recipe_ingredients[random_number]} to {recipes[recipe]}")
+            if used_recipe_ingredients == "":
+                used_recipe_ingredients = recipe_ingredients[random_number]
+            used_recipe_ingredients = used_recipe_ingredients + "," + recipe_ingredients[random_number]
 
-    db.session.add(r)
-    db.session.commit()
+        r = Recipe(
+            title=recipes[recipe],
+            ingredient=used_recipe_ingredients
+        )
+        db.session.add(r)
+        db.session.commit()
 
 
 @app.errorhandler(HTTPException)
