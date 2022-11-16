@@ -88,11 +88,21 @@ def generate_test_data():
                 used_recipe_ingredients = recipe_ingredients[random_number]
             used_recipe_ingredients = used_recipe_ingredients + "," + recipe_ingredients[random_number]
 
-        r = Recipe(
+        recipe_model = Recipe(
             title=recipes[recipe],
             ingredient=used_recipe_ingredients
         )
-        db.session.add(r)
+        db.session.add(recipe_model)
+        db.session.commit()
+
+    for count, ingredient in enumerate(recipe_ingredients):
+
+        ingredient_model = Ingredient(
+            name=str(ingredient),
+            amount=random.randint(0,9)
+        )
+
+        db.session.add(ingredient_model)
         db.session.commit()
 
 
