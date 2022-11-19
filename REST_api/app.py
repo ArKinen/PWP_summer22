@@ -85,7 +85,10 @@ def init_db_command():
 @click.command("reset")
 @with_appcontext
 def reset_db():
-    os.sys("del C:" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
+    try:
+        os.sys("del C:" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
+    except:
+        os.system("del C:" + os.sep + "Users" + os.sep + "artok" + os.sep + "PycharmProjects" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
 
 @click.command("testgen")
 @with_appcontext
