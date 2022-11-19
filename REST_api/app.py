@@ -1,3 +1,5 @@
+import os
+
 import click
 from flask import Flask, request, json
 from flask.cli import with_appcontext
@@ -75,16 +77,20 @@ def init_db_command():
     db.create_all()
 
 
-@click.command("roll")
-@with_appcontext
-def rollback_db_command():
-    db.session.rollback()
+#@click.command("roll")
+#@with_appcontext
+#def rollback_db_command():
+#    db.session.rollback()
 
+@click.command("reset")
+@with_appcontext
+def reset_db():
+    os.sys("del C:" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
 
 @click.command("testgen")
 @with_appcontext
 def generate_test_data():
-    db.session.rollback()
+    #db.session.rollback()
     all_recipes = ["Mac and Cheese", "Chicken and Potatoes", "Rice and Kebab"]
     compartments = ["Veggies", "Meat", "Mixed", "Add-ons"]
     ingredients_veggies = ["Cucumber", "Salad", "Tomato", "Paprika"]
@@ -97,8 +103,8 @@ def generate_test_data():
 
     input_recipe_category(recipe_categories)
     input_location(locations)
-    input_recipe(recipe_ingredients, all_recipes)
     input_compartment(compartments)
+    input_recipe(recipe_ingredients, all_recipes)
     input_ingredient(recipe_ingredients)
 
 
@@ -113,8 +119,11 @@ def input_recipe_category(_recipe_categories):
 
 def input_location(_location):
     for count, location_name in enumerate(_location):
+        #compartments_load_from_db = Compartment.query.all()
+
         location_model = Location(
-            name=str(location_name)
+            name=str(location_name)#,
+           # compartments=compartments_load_from_db[random.randint(0, 3)]
         )
         db.session.add(location_model)
         db.session.commit()
@@ -133,10 +142,12 @@ def input_recipe(recipe_ingredients, _all_recipes):
                 used_recipe_ingredients = used_recipe_ingredients + "," + recipe_ingredients[random_number]
             else:
                 break
-
+        compartments_load_from_db = Compartment.query.all()
+        print(compartments_load_from_db)
         recipe_model = Recipe(
             title=_all_recipes[recipe],
-            ingredient=used_recipe_ingredients
+            ingredient=used_recipe_ingredients,
+            compartments=compartments_load_from_db
         )
         db.session.add(recipe_model)
         db.session.commit()
@@ -184,4 +195,4 @@ def handle_exception(e):
 
 app.cli.add_command(init_db_command)
 app.cli.add_command(generate_test_data)
-app.cli.add_command(rollback_db_command)
+app.cli.add_command(reset_db)
