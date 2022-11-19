@@ -76,24 +76,19 @@ class Location(db.Model):
 def init_db_command():
     db.create_all()
 
-
-#@click.command("roll")
-#@with_appcontext
-#def rollback_db_command():
-#    db.session.rollback()
-
 @click.command("reset")
 @with_appcontext
 def reset_db():
     try:
         os.sys("del C:" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
+        print(f"reset_db - remove test.db from Mika")
     except:
         os.system("del C:" + os.sep + "Users" + os.sep + "artok" + os.sep + "PycharmProjects" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
+        print(f"reset_db - remove test.db from Arto")
 
 @click.command("testgen")
 @with_appcontext
 def generate_test_data():
-    #db.session.rollback()
     all_recipes = ["Mac and Cheese", "Chicken and Potatoes", "Rice and Kebab"]
     compartments = ["Veggies", "Meat", "Mixed", "Add-ons"]
     ingredients_veggies = ["Cucumber", "Salad", "Tomato", "Paprika"]
