@@ -52,7 +52,7 @@ class Compartment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(32), nullable=False, unique=True)
     location = db.relationship("Location", back_populates="compartments")
-    location_id = db.Column(db.Integer, db.ForeignKey("location.id"), unique=True)
+    location_id = db.Column(db.Integer, db.ForeignKey("location.id"), unique=False)
     ingredients = db.relationship("Ingredient", back_populates="compartments")
     recipes = db.relationship("Recipe", secondary=recipes, back_populates="compartments")
 
@@ -80,7 +80,7 @@ def init_db_command():
 @with_appcontext
 def reset_db():
     try:
-        os.sys("del C:" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
+        os.system("del C:" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
         print(f"reset_db - remove test.db from Mika")
     except:
         os.system("del C:" + os.sep + "Users" + os.sep + "artok" + os.sep + "PycharmProjects" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
@@ -152,13 +152,21 @@ def input_recipe(recipe_ingredients, _all_recipes):
 
 
 def input_compartment(_compartments):
+    location_load_from_db = Location.query.all()
     for count, compartment in enumerate(_compartments):
         compartment_model = Compartment(
-            name=str(compartment)
+            name=str(compartment),
+            location=location_load_from_db[random.randint(0, 1)]
         )
+        filtered_compartments = compartment_model.location.query.filter_by(id=2).all()
+
+        print(filtered_compartments[0].name)
         db.session.add(compartment_model)
         db.session.commit()
 
+        # TODO Measurement.query.filter_by(sensor="donkeysensor2000").all()
+        # TODO Out[3]: [<Measurement 1>]
+        # TODO Measurement.query.filter(Measurement.value > 100).all()
 
 def input_ingredient(_recipe_ingredients):
     compartments_load_from_db = Compartment.query.all()
