@@ -28,9 +28,11 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor.close()
 
 
-class RecipeCategory(db.Model):
+class Recipecategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     course_type = db.Column(db.String(32), nullable=False, unique=True)
+    recipes = db.relationship("Recipe", back_populates="course")
+    # recipe_id = db.Column(db.Integer, db.ForeignKey("recipe.id"), unique=True)
 
 
 # recipe_id = db.Column(db.Integer, db.ForeignKey("recipe.id"), unique=True)
@@ -42,10 +44,8 @@ class Recipe(db.Model):
     title = db.Column(db.String(16), nullable=False, unique=True)
     ingredient = db.Column(db.String(160), nullable=False, unique=True)
     compartments = db.relationship("Compartment", secondary=recipes, back_populates="recipes")
-
-
-# course = db.relationship("RecipeCategory", back_populates="recipes")
-#  course_id = db.Column(db.Integer, db.ForeignKey("course.id"), unique=True)
+    course = db.relationship("Recipecategory", back_populates="recipes")
+    course_id = db.Column(db.Integer, db.ForeignKey("recipecategory.id"), unique=False)
 
 
 class Compartment(db.Model):
@@ -76,6 +76,7 @@ class Location(db.Model):
 def init_db_command():
     db.create_all()
 
+
 @click.command("reset")
 @with_appcontext
 def reset_db():
@@ -83,8 +84,10 @@ def reset_db():
         os.system("del C:" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
         print(f"reset_db - remove test.db from Mika")
     except:
-        os.system("del C:" + os.sep + "Users" + os.sep + "artok" + os.sep + "PycharmProjects" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
+        os.system(
+            "del C:" + os.sep + "Users" + os.sep + "artok" + os.sep + "PycharmProjects" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
         print(f"reset_db - remove test.db from Arto")
+
 
 @click.command("testgen")
 @with_appcontext
@@ -108,8 +111,8 @@ def generate_test_data():
 
 def input_recipe_category(_recipe_categories):
     for count, category in enumerate(_recipe_categories):
-        category_model = RecipeCategory(
-            course_type= str(category)
+        category_model = Recipecategory(
+            course_type=str(category)
         )
         db.session.add(category_model)
         db.session.commit()
@@ -117,11 +120,11 @@ def input_recipe_category(_recipe_categories):
 
 def input_location(_location):
     for count, location_name in enumerate(_location):
-        #compartments_load_from_db = Compartment.query.all()
+        # compartments_load_from_db = Compartment.query.all()
 
         location_model = Location(
-            name=str(location_name)#,
-           # compartments=compartments_load_from_db[random.randint(0, 3)]
+            name=str(location_name)  # ,
+            # compartments=compartments_load_from_db[random.randint(0, 3)]
         )
         db.session.add(location_model)
         db.session.commit()
@@ -142,31 +145,41 @@ def input_recipe(recipe_ingredients, _all_recipes):
                 break
         compartments_load_from_db = Compartment.query.all()
         print(compartments_load_from_db)
+
+        recipecategory_load_from_db = Recipecategory.query.all()
+        print(recipecategory_load_from_db)
+
         recipe_model = Recipe(
             title=_all_recipes[recipe],
             ingredient=used_recipe_ingredients,
-            compartments=compartments_load_from_db
+            compartments=compartments_load_from_db,
+            course=recipecategory_load_from_db[random.randint(0, 2)]
         )
+
+        filtered_recipes = recipe_model.course.query.filter_by(id=2).all()
+
+        print(filtered_recipes[0].course_type)
+
         db.session.add(recipe_model)
         db.session.commit()
+
+        print(f"Recipe: {recipe_model.title} {recipe_model.ingredient} {recipe_model.compartments} {recipe_model.course.course_type}")
 
 
 def input_compartment(_compartments):
     location_load_from_db = Location.query.all()
+
     for count, compartment in enumerate(_compartments):
         compartment_model = Compartment(
             name=str(compartment),
             location=location_load_from_db[random.randint(0, 1)]
         )
         filtered_compartments = compartment_model.location.query.filter_by(id=2).all()
-
         print(filtered_compartments[0].name)
+
         db.session.add(compartment_model)
         db.session.commit()
 
-        # TODO Measurement.query.filter_by(sensor="donkeysensor2000").all()
-        # TODO Out[3]: [<Measurement 1>]
-        # TODO Measurement.query.filter(Measurement.value > 100).all()
 
 def input_ingredient(_recipe_ingredients):
     compartments_load_from_db = Compartment.query.all()
@@ -176,9 +189,17 @@ def input_ingredient(_recipe_ingredients):
             amount=random.randint(0, 9),
             compartments=compartments_load_from_db[random.randint(0, 3)]
         )
+
         # print(f"{ingredient_model.name} in {ingredient_model.compartments}")
         db.session.add(ingredient_model)
         db.session.commit()
+
+    for count, compartment in enumerate(compartments_load_from_db):
+       # compartments_load_from_db[0].ingredients = Ingredient.query.filter_by(compartment_id=2).all()
+       compartment.ingredients = Ingredient.query.filter_by(compartment_id=(count + 1)).all()
+       #print(f"input_ingredient - compartment - {compartment.ingredients.query.all()}")
+
+       db.session.commit()
 
 
 @app.errorhandler(HTTPException)
