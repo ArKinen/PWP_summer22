@@ -1,18 +1,24 @@
 import os
 
 import click
-from flask import Flask, request, json
+from flask import Flask, request, json, Response
 from flask.cli import with_appcontext
+from flask_restful import Api, Resource
 from sqlalchemy.engine import Engine
 from sqlalchemy import event
-from werkzeug.exceptions import HTTPException
+from sqlalchemy.exc import IntegrityError, StatementError
+from werkzeug.exceptions import HTTPException, NotFound, UnsupportedMediaType, BadRequest, Conflict
 from flask_sqlalchemy import SQLAlchemy
 import random
+from jsonschema import validate, ValidationError
+
+from werkzeug.routing import BaseConverter
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
+api = Api(app)
 
 recipes = db.Table("recipes",
                    db.Column("recipe_id", db.Integer, db.ForeignKey("recipe.id"), primary_key=True),
@@ -47,6 +53,22 @@ class Recipe(db.Model):
     course = db.relationship("Recipecategory", back_populates="recipes")
     course_id = db.Column(db.Integer, db.ForeignKey("recipecategory.id"), unique=False)
 
+    def deserialize(self, doc):
+        self.title = doc.get("title")
+        self.ingredient = doc["ingredient"]
+    @staticmethod
+    def json_schema():
+        schema = {
+            "type": "object",
+            "required": ["title"]
+        }
+        props = schema["properties"] = {}
+        props["title"] = {
+            "description": "Recipe name",
+            "type": "string"
+        }
+        return schema
+
 
 class Compartment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -69,6 +91,79 @@ class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(16), nullable=False)
     compartments = db.relationship("Compartment", back_populates="location")
+
+
+class RecipeCollection(Resource):
+    def get(self):
+        all_recipes = Recipe.query.all()
+
+        array_of_recipes = []
+
+        for [recipe_count, _] in enumerate(all_recipes):
+            recipe_dict = {
+                'title': all_recipes[recipe_count].title,
+                'course': all_recipes[recipe_count].course.course_type
+            }
+            array_of_recipes.append(recipe_dict)
+
+        return array_of_recipes, 200
+
+    def post(self):
+        # header_dict = {
+        #     'Location': api.url_for(RecipeItem, recipe=Recipe)
+        # }
+        return Response(status=201)
+
+
+class RecipeConverter(BaseConverter):
+    def to_python(self, recipe_name):
+        db_recipe = Recipe.query.filter_by(title=recipe_name).first()
+        if db_recipe is None:
+            raise NotFound
+        return db_recipe
+
+    def to_url(self, db_recipe):
+        return db_recipe.title
+
+
+class RecipeItem(Resource):
+
+    def get(self, recipe):
+        db_recipe = Recipe.query.filter_by(title=recipe.title).first()
+        db_recipe_dict = {
+            'title': db_recipe.title,
+            'course': db_recipe.course.course_type
+        }
+        if db_recipe is None:
+            raise NotFound
+        return db_recipe_dict, 200
+
+    def put(self, recipe):
+        if not request.json:
+            raise UnsupportedMediaType
+
+        try:
+            validate(request.json, Recipe.json_schema())
+        except ValidationError as e:
+            raise BadRequest(description=str(e))
+        recipe.deserialize(request.json)
+
+        try:
+            db.session.add(recipe)
+            db.session.commit()
+        except IntegrityError:
+            raise Conflict(
+                409,
+                description="Recipe with name '{title}' already exists.".format(
+                    **request.json
+                )
+            )
+        return Response(status=204)
+
+
+api.add_resource(RecipeCollection, "/api/recipes/")
+app.url_map.converters["recipe"] = RecipeConverter
+api.add_resource(RecipeItem, "/api/recipes/<recipe:recipe>/")
 
 
 @click.command("init-db")
@@ -163,7 +258,8 @@ def input_recipe(recipe_ingredients, _all_recipes):
         db.session.add(recipe_model)
         db.session.commit()
 
-        print(f"Recipe: {recipe_model.title} {recipe_model.ingredient} {recipe_model.compartments} {recipe_model.course.course_type}")
+        print(
+            f"Recipe: {recipe_model.title} {recipe_model.ingredient} {recipe_model.compartments} {recipe_model.course.course_type}")
 
 
 def input_compartment(_compartments):
@@ -195,11 +291,11 @@ def input_ingredient(_recipe_ingredients):
         db.session.commit()
 
     for count, compartment in enumerate(compartments_load_from_db):
-       # compartments_load_from_db[0].ingredients = Ingredient.query.filter_by(compartment_id=2).all()
-       compartment.ingredients = Ingredient.query.filter_by(compartment_id=(count + 1)).all()
-       #print(f"input_ingredient - compartment - {compartment.ingredients.query.all()}")
+        # compartments_load_from_db[0].ingredients = Ingredient.query.filter_by(compartment_id=2).all()
+        compartment.ingredients = Ingredient.query.filter_by(compartment_id=(count + 1)).all()
+        # print(f"input_ingredient - compartment - {compartment.ingredients.query.all()}")
 
-       db.session.commit()
+        db.session.commit()
 
 
 @app.errorhandler(HTTPException)
