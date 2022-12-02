@@ -48,7 +48,7 @@ class Recipecategory(db.Model):
 class Recipe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(16), nullable=False, unique=True)
-    ingredient = db.Column(db.String(160), nullable=False, unique=True)
+    ingredient = db.Column(db.String(160), nullable=True, unique=True)
     compartments = db.relationship("Compartment", secondary=recipes, back_populates="recipes")
     course = db.relationship("Recipecategory", back_populates="recipes")
     course_id = db.Column(db.Integer, db.ForeignKey("recipecategory.id"), unique=False)
@@ -101,18 +101,36 @@ class RecipeCollection(Resource):
 
         for [recipe_count, _] in enumerate(all_recipes):
             recipe_dict = {
-                'title': all_recipes[recipe_count].title,
-                'course': all_recipes[recipe_count].course.course_type
+                'title': all_recipes[recipe_count].title#,
+                #'course': all_recipes[recipe_count].course.course_type
             }
             array_of_recipes.append(recipe_dict)
 
         return array_of_recipes, 200
 
     def post(self):
-        # header_dict = {
-        #     'Location': api.url_for(RecipeItem, recipe=Recipe)
-        # }
-        return Response(status=201)
+        if not request.json:
+            return Response(status=415)
+
+        try:
+            validate(request.json, Recipe.json_schema())
+        except ValidationError:
+            return Response(status=400)
+
+        recipe_to_db = Recipe(
+            title=request.json["title"]
+        )
+        header_dict = {
+            'Location': api.url_for(RecipeItem, recipe=recipe_to_db)
+        }
+
+        try:
+            db.session.add(recipe_to_db)
+            db.session.commit()
+        except IntegrityError:
+            return Response(status=409)
+
+        return Response(status=201, content_type='text/html', headers=header_dict)
 
 
 class RecipeConverter(BaseConverter):
@@ -309,8 +327,12 @@ def handle_exception(e):
         "name": e.name,
         "description": e.description,
     })
+    if e.code == 400:
+        response = "Resource not found", e.description
     if e.code == 405:
         response = "POST method required", e.code
+    if e.code == 409:
+        response = "Failed to commit", e.description
     if e.code == 415:
         response = "Request content must be JSON", e.code
     return response
