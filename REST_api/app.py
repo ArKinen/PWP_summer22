@@ -94,6 +94,28 @@ class Ingredient(db.Model):
     compartment_id = db.Column(db.Integer, db.ForeignKey("compartment.id"), unique=False)
     compartments = db.relationship("Compartment", back_populates="ingredients")
 
+    def deserialize(self, doc):
+        self.name = doc.get("name")
+        self.amount = doc.get("amount")
+
+        compartment_load_from_db = Compartment.query.all()
+        for [_, compartment_instance] in enumerate(compartment_load_from_db):
+            if doc.get("compartment_id") == compartment_instance.id:
+                self.compartments = compartment_instance
+
+    @staticmethod
+    def json_schema():
+        schema = {
+            "type": "object",
+            "required": ["name"]
+        }
+        props = schema["properties"] = {}
+        props["name"] = {
+            "description": "Ingredient name",
+            "type": "string"
+        }
+        return schema
+
 
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -191,9 +213,102 @@ class RecipeItem(Resource):
         return Response(status=204)
 
 
+class IngredientCollection(Resource):
+    def get(self):
+        all_ingredients = Ingredient.query.all()
+
+        array_of_ingredients = []
+
+        for [ingredient_count, _] in enumerate(all_ingredients):
+            ingredient_dict = {
+                'name': all_ingredients[ingredient_count].name,
+                'amount': all_ingredients[ingredient_count].amount,
+                'compartment_id': all_ingredients[ingredient_count].compartment_id
+            }
+            array_of_ingredients.append(ingredient_dict)
+
+        return array_of_ingredients, 200
+
+    def post(self):
+        if not request.json:
+            return Response(status=415)
+
+        try:
+            validate(request.json, Ingredient.json_schema())
+        except ValidationError:
+            return Response(status=400)
+
+        ingredient_to_db = Ingredient(
+            name=request.json["name"]
+        )
+        header_dict = {
+            'Location': api.url_for(IngredientItem, ingredient=ingredient_to_db)
+        }
+
+        try:
+            db.session.add(ingredient_to_db)
+            db.session.commit()
+        except IntegrityError:
+            return Response(status=409)
+
+        return Response(status=201, content_type='text/html', headers=header_dict)
+
+
+class IngredientConverter(BaseConverter):
+    def to_python(self, ingredient_name):
+        db_ingredient = Ingredient.query.filter_by(name=ingredient_name).first()
+        if db_ingredient is None:
+            raise NotFound
+        return db_ingredient
+
+    def to_url(self, db_ingredient):
+        return db_ingredient.name
+
+
+class IngredientItem(Resource):
+
+    def get(self, ingredient):
+        db_ingredient = Ingredient.query.filter_by(name=ingredient.name).first()
+
+        print(db_ingredient.name)
+        db_ingredient_dict = {
+            'name': db_ingredient.name,
+            'amount': db_ingredient.amount,
+            'compartment_id': db_ingredient.compartment_id
+        }
+        if db_ingredient is None:
+            raise NotFound
+        return db_ingredient_dict, 200
+
+    def put(self, ingredient):
+        if not request.json:
+            raise UnsupportedMediaType
+
+        try:
+            validate(request.json, Ingredient.json_schema())
+        except ValidationError as e:
+            raise BadRequest(description=str(e))
+        ingredient.deserialize(request.json)
+
+        try:
+            db.session.add(ingredient)
+            db.session.commit()
+        except IntegrityError:
+            raise Conflict(
+                409,
+                description="Recipe with name '{name}' already exists.".format(
+                    **request.json
+                )
+            )
+        return Response(status=204)
+
+
 api.add_resource(RecipeCollection, "/api/recipes/")
 app.url_map.converters["recipe"] = RecipeConverter
 api.add_resource(RecipeItem, "/api/recipes/<recipe:recipe>/")
+api.add_resource(IngredientCollection, "/api/ingredients/")
+app.url_map.converters["ingredient"] = IngredientConverter
+api.add_resource(IngredientItem, "/api/ingredients/<ingredient:ingredient>/")
 
 
 @click.command("init-db")
