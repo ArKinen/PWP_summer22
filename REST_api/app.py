@@ -56,6 +56,9 @@ class Recipe(db.Model):
     def deserialize(self, doc):
         self.title = doc.get("title")
         self.ingredient = doc["ingredient"]
+
+
+
     @staticmethod
     def json_schema():
         schema = {
@@ -160,10 +163,14 @@ class RecipeItem(Resource):
         if not request.json:
             raise UnsupportedMediaType
 
+        #compartments_load_from_db = Compartment.query.all()
+        #recipecategory_load_from_db = Recipecategory.query.all()
+
         try:
             validate(request.json, Recipe.json_schema())
         except ValidationError as e:
             raise BadRequest(description=str(e))
+       # recipe.compartments = compartments_load_from_db
         recipe.deserialize(request.json)
 
         try:
@@ -193,13 +200,20 @@ def init_db_command():
 @click.command("reset")
 @with_appcontext
 def reset_db():
-    try:
-        os.system("del C:" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
-        print(f"reset_db - remove test.db from Mika")
-    except:
-        os.system(
-            "del C:" + os.sep + "Users" + os.sep + "artok" + os.sep + "PycharmProjects" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
-        print(f"reset_db - remove test.db from Arto")
+
+        if os.path.isfile("C:" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db"):
+            try:
+                os.system("del C:" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
+                print(f"reset_db - remove test.db from Mika")
+            except:
+                pass
+        else:
+            try:
+                os.system("del C:" + os.sep + "Users" + os.sep + "artok" + os.sep + "PycharmProjects" + os.sep +
+                          "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
+                print(f"reset_db - remove test.db from Arto")
+            except:
+                print(f"reset NOK")
 
 
 @click.command("testgen")
