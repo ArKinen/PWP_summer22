@@ -109,8 +109,9 @@ class RecipeCollection(Resource):
 
         for [recipe_count, _] in enumerate(all_recipes):
             recipe_dict = {
-                'title': all_recipes[recipe_count].title  # ,
-                # 'course': all_recipes[recipe_count].course.course_type
+                'title': all_recipes[recipe_count].title,
+                'course_type': all_recipes[recipe_count].course.course_type,
+                'ingredients': all_recipes[recipe_count].ingredient
             }
             array_of_recipes.append(recipe_dict)
 
