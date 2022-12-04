@@ -36,7 +36,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 class Recipecategory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    course_type = db.Column(db.String(32), nullable=False, unique=True)
+    course_type = db.Column(db.String(32), nullable=False, unique=False)
     recipes = db.relationship("Recipe", back_populates="course")
     # recipe_id = db.Column(db.Integer, db.ForeignKey("recipe.id"), unique=True)
 
@@ -57,7 +57,12 @@ class Recipe(db.Model):
         self.title = doc.get("title")
         self.ingredient = doc["ingredient"]
 
+        recipecategory_load_from_db = Recipecategory.query.all()
+        for [_, recipecategories_instance] in enumerate(recipecategory_load_from_db):
 
+            print(recipecategories_instance.course_type)
+            if doc.get("course") in recipecategories_instance.course_type:
+                self.course = recipecategories_instance
 
     @staticmethod
     def json_schema():
@@ -104,8 +109,8 @@ class RecipeCollection(Resource):
 
         for [recipe_count, _] in enumerate(all_recipes):
             recipe_dict = {
-                'title': all_recipes[recipe_count].title#,
-                #'course': all_recipes[recipe_count].course.course_type
+                'title': all_recipes[recipe_count].title  # ,
+                # 'course': all_recipes[recipe_count].course.course_type
             }
             array_of_recipes.append(recipe_dict)
 
@@ -163,14 +168,13 @@ class RecipeItem(Resource):
         if not request.json:
             raise UnsupportedMediaType
 
-        #compartments_load_from_db = Compartment.query.all()
-        #recipecategory_load_from_db = Recipecategory.query.all()
+        compartments_load_from_db = Compartment.query.all()
 
         try:
             validate(request.json, Recipe.json_schema())
         except ValidationError as e:
             raise BadRequest(description=str(e))
-       # recipe.compartments = compartments_load_from_db
+        recipe.compartments = compartments_load_from_db
         recipe.deserialize(request.json)
 
         try:
@@ -200,20 +204,19 @@ def init_db_command():
 @click.command("reset")
 @with_appcontext
 def reset_db():
-
-        if os.path.isfile("C:" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db"):
-            try:
-                os.system("del C:" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
-                print(f"reset_db - remove test.db from Mika")
-            except:
-                pass
-        else:
-            try:
-                os.system("del C:" + os.sep + "Users" + os.sep + "artok" + os.sep + "PycharmProjects" + os.sep +
-                          "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
-                print(f"reset_db - remove test.db from Arto")
-            except:
-                print(f"reset NOK")
+    if os.path.isfile("C:" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db"):
+        try:
+            os.system("del C:" + os.sep + "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
+            print(f"reset_db - remove test.db from Mika")
+        except:
+            pass
+    else:
+        try:
+            os.system("del C:" + os.sep + "Users" + os.sep + "artok" + os.sep + "PycharmProjects" + os.sep +
+                      "PWP_summer22" + os.sep + "REST_api" + os.sep + "test.db")
+            print(f"reset_db - remove test.db from Arto")
+        except:
+            print(f"reset NOK")
 
 
 @click.command("testgen")
