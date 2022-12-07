@@ -274,7 +274,8 @@ class IngredientItem(Resource):
         db_ingredient_dict = {
             'name': db_ingredient.name,
             'amount': db_ingredient.amount,
-            'compartment_id': db_ingredient.compartment_id
+            'compartment_id': db_ingredient.compartment_id,
+            'location': db_ingredient.compartments.location.name
         }
         if db_ingredient is None:
             raise NotFound
