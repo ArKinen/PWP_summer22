@@ -20,6 +20,11 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 api = Api(app)
 
+MASON = "application/vnd.mason+json"
+LINK_RELATIONS_URL = "/recipe/link-relations/"
+ERROR_PROFILE = "/profiles/error/"
+RECIPE_PROFILE = "/profiles/recipe/"
+
 recipes = db.Table("recipes",
                    db.Column("recipe_id", db.Integer, db.ForeignKey("recipe.id"), primary_key=True),
                    db.Column("compartment_id", db.Integer, db.ForeignKey("compartment.id"), primary_key=True))
@@ -123,21 +128,186 @@ class Location(db.Model):
     compartments = db.relationship("Compartment", back_populates="location")
 
 
+class MasonBuilder(dict):
+    """
+    A convenience class for managing dictionaries that represent Mason
+    objects. It provides nice shorthands for inserting some of the more
+    elements into the object but mostly is just a parent for the much more
+    useful subclass defined next. This class is generic in the sense that it
+    does not contain any application specific implementation details.
+    """
+
+    def add_error(self, title, details):
+        """
+        Adds an error element to the object. Should only be used for the root
+        object, and only in error scenarios.
+
+        Note: Mason allows more than one string in the @messages property (it's
+        in fact an array). However we are being lazy and supporting just one
+        message.
+
+        : param str title: Short title for the error
+        : param str details: Longer human-readable description
+        """
+
+        self["@error"] = {
+            "@message": title,
+            "@messages": [details],
+        }
+
+    def add_namespace(self, ns, uri):
+        """
+        Adds a namespace element to the object. A namespace defines where our
+        link relations are coming from. The URI can be an address where
+        developers can find information about our link relations.
+
+        : param str ns: the namespace prefix
+        : param str uri: the identifier URI of the namespace
+        """
+
+        if "@namespaces" not in self:
+            self["@namespaces"] = {}
+
+        self["@namespaces"][ns] = {
+            "name": uri
+        }
+
+    def add_control(self, ctrl_name, href, **kwargs):
+        """
+        Adds a control property to an object. Also adds the @controls property
+        if it doesn't exist on the object yet. Technically only certain
+        properties are allowed for kwargs but again we're being lazy and don't
+        perform any checking.
+
+        The allowed properties can be found from here
+        https://github.com/JornWildt/Mason/blob/master/Documentation/Mason-draft-2.md
+
+        : param str ctrl_name: name of the control (including namespace if any)
+        : param str href: target URI for the control
+        """
+
+        if "@controls" not in self:
+            self["@controls"] = {}
+
+        self["@controls"][ctrl_name] = kwargs
+        self["@controls"][ctrl_name]["href"] = href
+
+
+class RecipeBuilder(MasonBuilder):
+
+    def add_control_add_recipe(self):
+        self.add_control(
+            "recipe:add-recipe",
+            api.url_for(RecipeCollection),
+            method="POST",
+            encoding="JSON",
+            title="Add a new recipe",
+            schema=Recipe.json_schema()
+        )
+
+    def add_control_edit_recipe(self, recipe):
+        self.add_control(
+            "edit",
+            api.url_for(RecipeItem, recipe=recipe),
+            method="PUT",
+            encoding="json",
+            title="Edit this sensor",
+            schema=Ingredient.get_schema()
+        )
+
+    def add_control_add_ingredient(self):
+        self.add_control(
+            "recipe:add-ingredient",
+            api.url_for(IngredientCollection),
+            method="POST",
+            encoding="JSON",
+            title="Add a new ingredient",
+            schema=Ingredient.json_schema()
+        )
+
+    def add_control_edit_ingredient(self, ingredient):
+        self.add_control(
+            "edit",
+            api.url_for(IngredientItem, ingredient=ingredient),
+            method="PUT",
+            encoding="json",
+            title="Edit this sensor",
+            schema=Ingredient.get_schema()
+        )
+
+    def add_control_get_recipes(self, recipe):
+        base_uri = api.url_for(RecipeCollection, recipe=recipe)
+        uri = base_uri + "?start={index}"
+        self.add_control(
+            "recipe:recipes",
+            uri,
+            isHrefTemplate=True,
+            schema=self._recipe_schema()
+        )
+
+    @staticmethod
+    def _recipe_schema():
+        schema = {
+            "type": "object",
+            "properties": {},
+            "required": []
+        }
+        props = schema["properties"]
+        props["index"] = {
+            "description": "Starting index for recipes",
+            "type": "integer",
+            "default": "0"
+        }
+        return schema
+
+    def add_control_get_ingredients(self, ingredient):
+        base_uri = api.url_for(IngredientCollection, ingredient=ingredient)
+        uri = base_uri + "?start={index}"
+        self.add_control(
+            "ingredient:ingredients",
+            uri,
+            isHrefTemplate=True,
+            schema=self._ingredient_schema()
+        )
+
+    @staticmethod
+    def _ingredient_schema():
+        schema = {
+            "type": "object",
+            "properties": {},
+            "required": []
+        }
+        props = schema["properties"]
+        props["index"] = {
+            "description": "Starting index for ingredients",
+            "type": "integer",
+            "default": "0"
+        }
+        return schema
+
+
 class RecipeCollection(Resource):
     def get(self):
+        body = RecipeBuilder()
+        body.add_namespace("recipe", LINK_RELATIONS_URL)
+        body.add_control("self", api.url_for(RecipeCollection))
+        body.add_control_add_recipe()
+        body["items"] = []
+
         all_recipes = Recipe.query.all()
 
-        array_of_recipes = []
-
         for [recipe_count, _] in enumerate(all_recipes):
-            recipe_dict = {
-                'title': all_recipes[recipe_count].title,
-                'course_type': all_recipes[recipe_count].course.course_type,
-                'ingredients': all_recipes[recipe_count].ingredient
-            }
-            array_of_recipes.append(recipe_dict)
 
-        return array_of_recipes, 200
+            recipe_item = RecipeBuilder(
+                title=all_recipes[recipe_count].title,
+                course=all_recipes[recipe_count].course.course_type,
+                ingredient=all_recipes[recipe_count].ingredient
+            )
+            recipe_item.add_control("self", api.url_for(RecipeItem, recipe=all_recipes[recipe_count]))
+            recipe_item.add_control("profile", RECIPE_PROFILE)
+            body["items"].append(recipe_item)
+
+        return Response(json.dumps(body), 200, mimetype=MASON)
 
     def post(self):
         if not request.json:
@@ -449,9 +619,10 @@ def input_ingredient(_recipe_ingredients):
 
         db.session.commit()
 
-
+#
 @app.errorhandler(HTTPException)
 def handle_exception(e):
+    #TODO Masonize this handler
     """Return JSON instead of HTML for HTTP errors."""
     # start with the correct headers and status code from the error
     response = e.get_response()
