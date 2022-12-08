@@ -212,7 +212,7 @@ class RecipeBuilder(MasonBuilder):
             method="PUT",
             encoding="json",
             title="Edit this sensor",
-            schema=Ingredient.get_schema()
+            schema=Ingredient.json_schema()
         )
 
     def add_control_add_ingredient(self):
@@ -232,7 +232,7 @@ class RecipeBuilder(MasonBuilder):
             method="PUT",
             encoding="json",
             title="Edit this sensor",
-            schema=Ingredient.get_schema()
+            schema=Ingredient.json_schema()
         )
 
     def add_control_get_recipes(self, recipe):
@@ -297,7 +297,6 @@ class RecipeCollection(Resource):
         all_recipes = Recipe.query.all()
 
         for [recipe_count, _] in enumerate(all_recipes):
-
             recipe_item = RecipeBuilder(
                 title=all_recipes[recipe_count].title,
                 course=all_recipes[recipe_count].course.course_type,
@@ -347,15 +346,21 @@ class RecipeConverter(BaseConverter):
 
 class RecipeItem(Resource):
 
-    def get(self, recipe):
+    def get(self, recipe): #TODO add controls
         db_recipe = Recipe.query.filter_by(title=recipe.title).first()
-        db_recipe_dict = {
-            'title': db_recipe.title,
-            'course': db_recipe.course.course_type
-        }
+        body = RecipeBuilder(
+            title=db_recipe.title,
+            course=db_recipe.course.course_type
+        )
+
+        body.add_namespace("recipe", LINK_RELATIONS_URL)
+        body.add_control("self", api.url_for(RecipeItem, recipe=recipe))
+        body.add_control("profile", RECIPE_PROFILE)
+        body.add_control("collection", api.url_for(RecipeCollection))
+
         if db_recipe is None:
             raise NotFound
-        return db_recipe_dict, 200
+        return Response(json.dumps(body), 200, mimetype=MASON)
 
     def put(self, recipe):
         if not request.json:
@@ -387,17 +392,22 @@ class IngredientCollection(Resource):
     def get(self):
         all_ingredients = Ingredient.query.all()
 
-        array_of_ingredients = []
+        body = RecipeBuilder(
+            items=[]
+        )
+        body.add_namespace("recipe", LINK_RELATIONS_URL)
 
         for [ingredient_count, _] in enumerate(all_ingredients):
-            ingredient_dict = {
-                'name': all_ingredients[ingredient_count].name,
-                'amount': all_ingredients[ingredient_count].amount,
-                'compartment_id': all_ingredients[ingredient_count].compartment_id
-            }
-            array_of_ingredients.append(ingredient_dict)
+            ingredient_item = RecipeBuilder(
+                name=all_ingredients[ingredient_count].name,
+                amount=all_ingredients[ingredient_count].amount,
+                compartment_id=all_ingredients[ingredient_count].compartment_id
+            )
+            uri = api.url_for(IngredientItem, ingredient=all_ingredients[ingredient_count])
+            ingredient_item.add_control("self", uri)
+            body["items"].append(ingredient_item)
 
-        return array_of_ingredients, 200
+        return Response(json.dumps(body), 200, mimetype=MASON)
 
     def post(self):
         if not request.json:
@@ -575,13 +585,13 @@ def input_recipe(recipe_ingredients, _all_recipes):
 
         filtered_recipes = recipe_model.course.query.filter_by(id=2).all()
 
-        print(filtered_recipes[0].course_type)
+        # print(filtered_recipes[0].course_type)
 
         db.session.add(recipe_model)
         db.session.commit()
 
-        print(
-            f"Recipe: {recipe_model.title} {recipe_model.ingredient} {recipe_model.compartments} {recipe_model.course.course_type}")
+        # print(
+        #    f"Recipe: {recipe_model.title} {recipe_model.ingredient} {recipe_model.compartments} {recipe_model.course.course_type}")
 
 
 def input_compartment(_compartments):
@@ -593,7 +603,7 @@ def input_compartment(_compartments):
             location=location_load_from_db[random.randint(0, 1)]
         )
         filtered_compartments = compartment_model.location.query.filter_by(id=2).all()
-        print(filtered_compartments[0].name)
+        # print(filtered_compartments[0].name)
 
         db.session.add(compartment_model)
         db.session.commit()
@@ -619,10 +629,11 @@ def input_ingredient(_recipe_ingredients):
 
         db.session.commit()
 
+
 #
 @app.errorhandler(HTTPException)
 def handle_exception(e):
-    #TODO Masonize this handler
+    # TODO Masonize this handler
     """Return JSON instead of HTML for HTTP errors."""
     # start with the correct headers and status code from the error
     response = e.get_response()
