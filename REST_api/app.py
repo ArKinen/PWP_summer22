@@ -366,17 +366,17 @@ class RecipeItem(Resource):
 
         for index in range(0, len(parsed_ingredients)):
             db_ingredients = Ingredient.query.filter_by(name=parsed_ingredients[index]).first()
-            #print(db_ingredients)
+            db_compartments = Compartment.query.filter_by(id=db_ingredients.compartment_id).first()
 
             ingredient_item = RecipeBuilder(
                 name=db_ingredients.name,
                 amount=db_ingredients.amount,
-                compartment_id=db_ingredients.compartment_id
+                compartment_name=db_compartments.name
             )
             uri = api.url_for(IngredientItem, ingredient=db_ingredients)
             ingredient_item.add_control("self", uri)
             body["items"].append(ingredient_item)
-        # body.add_control_add_ingredient(recipe)
+
         body.add_control_get_recipes(recipe)
 
         if db_recipe is None:
