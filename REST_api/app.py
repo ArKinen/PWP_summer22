@@ -357,6 +357,9 @@ class RecipeItem(Resource):
         body.add_control("self", api.url_for(RecipeItem, recipe=recipe))
         body.add_control("profile", RECIPE_PROFILE)
         body.add_control("collection", api.url_for(RecipeCollection))
+        body.add_control_edit_recipe(recipe)
+        #body.add_control_add_ingredient(recipe)
+        body.add_control_get_recipes(recipe)
 
         if db_recipe is None:
             raise NotFound
@@ -450,16 +453,25 @@ class IngredientItem(Resource):
     def get(self, ingredient):
         db_ingredient = Ingredient.query.filter_by(name=ingredient.name).first()
 
-        print(db_ingredient.name)
-        db_ingredient_dict = {
-            'name': db_ingredient.name,
-            'amount': db_ingredient.amount,
-            'compartment_id': db_ingredient.compartment_id,
-            'location': db_ingredient.compartments.location.name
-        }
+        #print(db_ingredient.name)
+        body = RecipeBuilder(
+            name=db_ingredient.name,
+            amount=db_ingredient.amount,
+            compartment_id=db_ingredient.compartment_id,
+            location=db_ingredient.compartments.location.name
+        )
+
+        body.add_namespace("ingredient", LINK_RELATIONS_URL)
+        body.add_control("self", api.url_for(IngredientItem, ingredient=ingredient))
+        body.add_control("profile", RECIPE_PROFILE)
+        body.add_control("collection", api.url_for(IngredientCollection))
+        body.add_control_edit_ingredient(ingredient)
+        # body.add_control_add_ingredient(recipe)
+        body.add_control_get_ingredients(ingredient)
+
         if db_ingredient is None:
             raise NotFound
-        return db_ingredient_dict, 200
+        return Response(json.dumps(body), 200, mimetype=MASON)
 
     def put(self, ingredient):
         if not request.json:
