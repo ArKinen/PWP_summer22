@@ -358,6 +358,24 @@ class RecipeItem(Resource):
         body.add_control("profile", RECIPE_PROFILE)
         body.add_control("collection", api.url_for(RecipeCollection))
         body.add_control_edit_recipe(recipe)
+        body.add_control_get_ingredients(db_recipe.ingredient)
+        parsed_ingredients = db_recipe.ingredient.split(",")
+        body = RecipeBuilder(
+            items=[]
+        )
+
+        for index in range(0, len(parsed_ingredients)):
+            db_ingredients = Ingredient.query.filter_by(name=parsed_ingredients[index]).first()
+            print(db_ingredients)
+
+            ingredient_item = RecipeBuilder(
+                name=db_ingredients.name,
+                amount=db_ingredients.amount,
+                compartment_id=db_ingredients.compartment_id
+            )
+            uri = api.url_for(IngredientItem, ingredient=db_ingredients)
+            ingredient_item.add_control("self", uri)
+            body["items"].append(ingredient_item)
         # body.add_control_add_ingredient(recipe)
         body.add_control_get_recipes(recipe)
 
@@ -531,10 +549,10 @@ def reset_db():
 @click.command("testgen")
 @with_appcontext
 def generate_test_data():
-    all_recipes = ["Mac and Cheese", "Chicken and Potatoes", "Rice and Kebab"]
+    all_recipes = ["Mac_and_Cheese", "Chicken_and_Potatoes", "Rice_and_Kebab"]
     compartments = ["Veggies", "Meat", "Mixed", "Add-ons"]
     ingredients_veggies = ["Cucumber", "Salad", "Tomato", "Paprika"]
-    ingredients_mixed = ["Mashed Potatoes", "Rice"]
+    ingredients_mixed = ["Mashed_Potatoes", "Rice"]
     ingredients_add_ons = ["Ketchup"]
     ingredients_meat = ["Chicken leg", "Minced meat", "Kebab"]
     locations = ["Fridge", "Freezer"]
