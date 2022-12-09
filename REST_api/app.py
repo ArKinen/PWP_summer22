@@ -366,7 +366,7 @@ class RecipeItem(Resource):
 
         for index in range(0, len(parsed_ingredients)):
             db_ingredients = Ingredient.query.filter_by(name=parsed_ingredients[index]).first()
-            print(db_ingredients)
+            #print(db_ingredients)
 
             ingredient_item = RecipeBuilder(
                 name=db_ingredients.name,

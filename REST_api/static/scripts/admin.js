@@ -37,7 +37,7 @@ function renderRecipe(body) {
     $("div.navigation")
         .html(
         "<a href='" +
-        body["@controls"].collection.href +
+        body["@controls"]["recipe:recipes"].href +
         "' onClick='followLink(event, this, renderRecipes)'>Collection</a>"
         )
 
@@ -45,9 +45,14 @@ function renderRecipe(body) {
 
     $(".resulttable thead").empty();
     $(".resulttable tbody").empty();
-    renderSensorForm(body["@controls"].edit);
-    $("input[name='title']").val(body.title);
-    $("input[name='course']").val(body.course);
+    let item = body["items"][0]
+    let item_self = item["@controls"].self
+    //console.log("item" + item.toString())
+    //console.log("item_self" + item_self.toString())
+    //console.log("edit" + item_self["@controls"].edit.toString())
+    //renderRecipeForm(item["@controls"].self);
+    //$("input[name='title']").val(body.title);
+    //$("input[name='course']").val(body.course);
    // $("form input[type='submit']").before(
      //   "<label>Location</label>" +
        // "<input type='text' name='location' value='" +
@@ -90,20 +95,20 @@ function renderRecipes(body) {
     body.items.forEach(function (item) {
         tbody.append(recipeRow(item));
     });
-    renderRecipeForm(body["@controls"]["recipe:add-sensor"]);
+    //renderRecipeForm(body["@controls"]["recipe:add-recipe"]);
 }
 
 function renderRecipeForm(ctrl) {
     let form = $("<form>");
     let title = ctrl.schema.properties.title;
-    let course = ctrl.schema.properties.course;
+  let course = ctrl.schema.properties.course;
     form.attr("action", ctrl.href);
     form.attr("method", ctrl.method);
     form.submit(submitSensor);
     form.append("<label>" + title.description + "</label>");
-    form.append("<input type='text' name='name'>");
+    form.append("<input type='text' name='title'>");
     form.append("<label>" + course.description + "</label>");
-    form.append("<input type='text' name='model'>");
+    form.append("<input type='text' name='course'>");
     ctrl.schema.required.forEach(function (property) {
         $("input[name='" + property + "']").attr("required", true);
     });
