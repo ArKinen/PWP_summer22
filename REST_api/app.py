@@ -14,7 +14,7 @@ from jsonschema import validate, ValidationError
 
 from werkzeug.routing import BaseConverter
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
@@ -346,7 +346,7 @@ class RecipeConverter(BaseConverter):
 
 class RecipeItem(Resource):
 
-    def get(self, recipe): #TODO add controls
+    def get(self, recipe):  # TODO add controls
         db_recipe = Recipe.query.filter_by(title=recipe.title).first()
         body = RecipeBuilder(
             title=db_recipe.title,
@@ -358,7 +358,7 @@ class RecipeItem(Resource):
         body.add_control("profile", RECIPE_PROFILE)
         body.add_control("collection", api.url_for(RecipeCollection))
         body.add_control_edit_recipe(recipe)
-        #body.add_control_add_ingredient(recipe)
+        # body.add_control_add_ingredient(recipe)
         body.add_control_get_recipes(recipe)
 
         if db_recipe is None:
@@ -453,7 +453,7 @@ class IngredientItem(Resource):
     def get(self, ingredient):
         db_ingredient = Ingredient.query.filter_by(name=ingredient.name).first()
 
-        #print(db_ingredient.name)
+        # print(db_ingredient.name)
         body = RecipeBuilder(
             name=db_ingredient.name,
             amount=db_ingredient.amount,
@@ -640,6 +640,21 @@ def input_ingredient(_recipe_ingredients):
         # print(f"input_ingredient - compartment - {compartment.ingredients.query.all()}")
 
         db.session.commit()
+
+
+@app.route(LINK_RELATIONS_URL)
+def send_link_relations():
+    return "link relations"
+
+
+@app.route("/profiles/<profile>/")
+def send_profile(profile):
+    return "you requests {} profile".format(profile)
+
+
+@app.route("/admin/")
+def admin_site():
+    return app.send_static_file("html/admin.html")
 
 
 #
