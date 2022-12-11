@@ -41,6 +41,29 @@ function ingredientRow(item) {
             "</td></tr>";
 }
 
+function appendRecipeRow(body) {
+    $(".resulttable tbody").append(recipeRow(body));
+}
+
+function getSubmittedRecipe(data, status, jqxhr) {
+    renderMsg("Successful");
+    let href = jqxhr.getResponseHeader("Location");
+    if (href) {
+        getResource(href, appendRecipeRow);
+    }
+}
+
+function submitRecipe(event) {
+    event.preventDefault();
+
+    let data = {};
+    let form = $("div.form form");
+    data.title = $("input[name='title']").val();
+    data.course = $("input[name='course']").val();
+    data.ingredient = $("input[name='ingredient']").val();
+    sendData(form.attr("action"), form.attr("method"), data, getSubmittedRecipe);
+}
+
 function renderRecipe(body) {
     $("div.navigation")
         .html(
@@ -49,7 +72,7 @@ function renderRecipe(body) {
         "' onClick='followLink(event, this, renderRecipes)'>Collection</a>"
         )
 
-    $("div.tablecontrols").empty() //ARKI
+    $("div.tablecontrols").empty()
 
     $(".resulttable thead").html(
         "<tr><th>Name</th><th>Amount</th><th>Compartment</th></tr>"
@@ -79,10 +102,24 @@ function renderRecipes(body) {
 function renderRecipeForm(ctrl) {
     let form = $("<form>");
     let title = ctrl.schema.properties.title;
+    let course = ctrl.schema.properties.course;
+    let ingredient = ctrl.schema.properties.ingredient;
+
     form.attr("action", ctrl.href);
     form.attr("method", ctrl.method);
+    form.submit(submitRecipe);
     form.append("<label>" + title.description + "</label>");
     form.append("<input type='text' name='title'>");
+    form.append("<label>" + course.description + "</label>");
+    form.append("<input type='text' name='course'>");
+    form.append("<label>" + ingredient.description + "</label>");
+    form.append("<input type='text' name='ingredient'>");
+
+    ctrl.schema.required.forEach(function (property) {
+        $("input[name='" + property + "']").attr("required", true);
+    });
+    form.append("<input type='submit' name='submit' value='Submit'>");
+    $("div.form").html(form);
 }
 
 function sendData(href, method, item, postProcessor) {
@@ -95,11 +132,6 @@ function sendData(href, method, item, postProcessor) {
         success: postProcessor,
         error: renderError
     });
-}
-
-function followLink(event, a, renderer) {
-    event.preventDefault();
-    getResource($(a).attr("href"), renderer);
 }
 
 $(document).ready(function () {

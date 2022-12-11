@@ -80,6 +80,14 @@ class Recipe(db.Model):
             "description": "Recipe name",
             "type": "string"
         }
+        props["course"] = {
+            "description": "Recipe course type",
+            "type": "string"
+        }
+        props["ingredient"] = {
+            "description": "Recipe ingredients",
+            "type": "string"
+        }
         return schema
 
 
@@ -299,7 +307,7 @@ class RecipeCollection(Resource):
         for [recipe_count, _] in enumerate(all_recipes):
             recipe_item = RecipeBuilder(
                 title=all_recipes[recipe_count].title,
-                course=all_recipes[recipe_count].course.course_type,
+                # course=all_recipes[recipe_count].course.course_type,
                 ingredient=all_recipes[recipe_count].ingredient
             )
             recipe_item.add_control("self", api.url_for(RecipeItem, recipe=all_recipes[recipe_count]))
@@ -317,8 +325,12 @@ class RecipeCollection(Resource):
         except ValidationError:
             return Response(status=400)
 
+        db_course = Recipecategory.query.filter_by(course_type=request.json["course"]).first()
+
         recipe_to_db = Recipe(
-            title=request.json["title"]
+            title=request.json["title"],
+            course=db_course,
+            ingredient=request.json["ingredient"]
         )
         header_dict = {
             'Location': api.url_for(RecipeItem, recipe=recipe_to_db)
@@ -350,7 +362,8 @@ class RecipeItem(Resource):
         db_recipe = Recipe.query.filter_by(title=recipe.title).first()
         body = RecipeBuilder(
             title=db_recipe.title,
-            course=db_recipe.course.course_type
+            # course=db_recipe.course.course_type,
+            ingredient=db_recipe.ingredient
         )
 
         body.add_namespace("recipe", LINK_RELATIONS_URL)
@@ -359,25 +372,25 @@ class RecipeItem(Resource):
         body.add_control("collection", api.url_for(RecipeCollection))
         body.add_control_edit_recipe(recipe)
         body.add_control_get_ingredients(db_recipe.ingredient)
-        parsed_ingredients = db_recipe.ingredient.split(",")
-        body = RecipeBuilder(
-            items=[]
-        )
-
-        for index in range(0, len(parsed_ingredients)):
-            db_ingredients = Ingredient.query.filter_by(name=parsed_ingredients[index]).first()
-            db_compartments = Compartment.query.filter_by(id=db_ingredients.compartment_id).first()
-
-            ingredient_item = RecipeBuilder(
-                name=db_ingredients.name,
-                amount=db_ingredients.amount,
-                compartment_name=db_compartments.name
+        if db_recipe.ingredient != None:
+            body = RecipeBuilder(
+                items=[]
             )
-            uri = api.url_for(IngredientItem, ingredient=db_ingredients)
-            ingredient_item.add_control("self", uri)
-            body["items"].append(ingredient_item)
+            parsed_ingredients = db_recipe.ingredient.split(",")
+            for index in range(0, len(parsed_ingredients)):
+                db_ingredients = Ingredient.query.filter_by(name=parsed_ingredients[index]).first()
+                db_compartments = Compartment.query.filter_by(id=db_ingredients.compartment_id).first()
 
-        body.add_control_get_recipes(recipe)
+                ingredient_item = RecipeBuilder(
+                    name=db_ingredients.name,
+                    amount=db_ingredients.amount,
+                    compartment_name=db_compartments.name
+                )
+                uri = api.url_for(IngredientItem, ingredient=db_ingredients)
+                ingredient_item.add_control("self", uri)
+                body["items"].append(ingredient_item)
+
+            body.add_control_get_recipes(recipe)
 
         if db_recipe is None:
             raise NotFound
