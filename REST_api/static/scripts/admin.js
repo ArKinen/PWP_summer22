@@ -64,6 +64,17 @@ function submitRecipe(event) {
     sendData(form.attr("action"), form.attr("method"), data, getSubmittedRecipe);
 }
 
+function submitIngredient(event) {
+    event.preventDefault();
+
+    let data = {};
+    let form = $("div.form form");
+    data.title = $("input[name='name']").val();
+    data.course = $("input[name='amount']").val();
+    data.ingredient = $("input[name='compartment']").val();
+    //sendData(form.attr("action"), form.attr("method"), data, getSubmittedIngredient());
+}
+
 function renderRecipe(body) {
     $("div.navigation")
         .html(
@@ -122,6 +133,41 @@ function renderRecipeForm(ctrl) {
     $("div.form").html(form);
 }
 
+function renderIngredients(body) {
+    $("div.navigation").empty();
+    $("div.tablecontrols").empty();
+    $(".resulttable thead").html(
+        "<tr><th>Add ingredient</th></tr>"
+    );
+    let tbody = $(".resulttable tbody");
+    tbody.empty();
+    renderIngredientForm(body["@controls"]["ingredients:add-ingredient"]);
+}
+
+
+function renderIngredientForm(ctrl) {
+    let form = $("<form>");
+    let name = ctrl.schema.properties.name;
+    let amount  =ctrl.schema.properties.amount;
+    let compartments = ctrl.schema.properties.compartments;
+
+    form.attr("action", ctrl.href);
+    form.attr("method", ctrl.method);
+    form.submit(submitIngredient);
+    form.append("<label>" + name.description + "</label>");
+    form.append("<input type='text' name='name'>");
+    form.append("<label>" + amount.description + "</label>");
+    form.append("<input type='text' name='amount'>");
+    form.append("<label>" + compartments.description + "</label>");
+    form.append("<input type='text' name='compartment'>");
+
+    ctrl.schema.required.forEach(function (property) {
+        $("input[name='" + property + "']").attr("required", true);
+    });
+    form.append("<input type='submit' name='submit' value='Submit'>");
+    $("div.form").html(form);
+}
+
 function sendData(href, method, item, postProcessor) {
     $.ajax({
         url: href,
@@ -136,4 +182,5 @@ function sendData(href, method, item, postProcessor) {
 
 $(document).ready(function () {
     getResource("http://localhost:5000/api/recipes/", renderRecipes);
+    getResource("http://localhost:5000/api/ingredients/", renderIngredientForm);
 });
