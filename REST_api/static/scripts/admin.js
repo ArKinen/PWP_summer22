@@ -182,5 +182,5 @@ function sendData(href, method, item, postProcessor) {
 
 $(document).ready(function () {
     getResource("http://localhost:5000/api/recipes/", renderRecipes);
-    getResource("http://localhost:5000/api/ingredients/", renderIngredientForm);
+    //getResource("http://localhost:5000/api/ingredients/", renderIngredients);
 });
