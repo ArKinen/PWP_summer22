@@ -479,16 +479,12 @@ class IngredientCollection(Resource):
         except ValidationError:
             return Response(status=400)
 
-        db_compartments = Compartment.query.all()
-        for compartment_count, compartment in enumerate(db_compartments):
-            if request.json["compartment"] == compartment.name:
-                db_compartment = compartment
-                break
+        db_compartments = Compartment.query.filter_by(name=request.json["compartment"]).first()
 
         ingredient_to_db = Ingredient(
             name=request.json["name"],
             amount=request.json["amount"],
-            compartments=db_compartment
+            compartments=db_compartments
         )
         header_dict = {
             'Location': api.url_for(IngredientItem, ingredient=ingredient_to_db)

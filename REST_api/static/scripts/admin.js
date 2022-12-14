@@ -35,14 +35,21 @@ function recipeRow(item) {
 }
 
 function ingredientRow(item) {
+    let link = "<a href='" +
+                item["@controls"].self.href + "'/a>";
+
     return "<tr><td>" + item.name +
             "</td><td>" + item.amount +
-            "</td><td>" + item.compartment_name +
-            "</td></tr>";
+            "</td><td>" + item.compartment_id +
+            "</td><td>" + link + "</td></tr>";
 }
 
 function appendRecipeRow(body) {
     $(".resulttable tbody").append(recipeRow(body));
+}
+
+function appendIngredientRow(body) {
+    $(".resulttable tbody").append(ingredientRow(body));
 }
 
 function getSubmittedRecipe(data, status, jqxhr) {
@@ -50,6 +57,14 @@ function getSubmittedRecipe(data, status, jqxhr) {
     let href = jqxhr.getResponseHeader("Location");
     if (href) {
         getResource(href, appendRecipeRow);
+    }
+}
+
+function getSubmittedIngredient(data, status, jqxhr) {
+    renderMsg("Successful");
+    let href = jqxhr.getResponseHeader("Location");
+    if (href) {
+        getResource(href, appendIngredientRow);
     }
 }
 
@@ -69,10 +84,10 @@ function submitIngredient(event) {
 
     let data = {};
     let form = $("div.form form");
-    data.title = $("input[name='name']").val();
-    data.course = $("input[name='amount']").val();
-    data.ingredient = $("input[name='compartment']").val();
-    //sendData(form.attr("action"), form.attr("method"), data, getSubmittedIngredient());
+    data.name = $("input[name='name']").val();
+    data.amount = $("input[name='amount']").val();
+    data.compartment = $("input[name='compartment']").val();
+    sendData(form.attr("action"), form.attr("method"), data, getSubmittedIngredient);
 }
 
 function renderRecipe(body) {
@@ -133,6 +148,27 @@ function renderRecipeForm(ctrl) {
     $("div.form").html(form);
 }
 
+function renderIngredient(body) {
+    $("div.navigation")
+        .html(
+        "<a href='" +
+        body["@controls"]["ingredient:ingredients"].href +
+        "' onClick='followLink(event, this, renderIngredients)'>Ingredients</a>"
+        )
+
+    $("div.tablecontrols").empty()
+
+    $(".resulttable thead").html(
+        "<tr><th>Name</th><th>Amount</th><th>Compartment</th></tr>"
+    );
+    let tbody = $(".resulttable tbody");
+    tbody.empty();
+
+    body.items.forEach(function (item) {
+        tbody.append(ingredientRow(item));
+    });
+}
+
 function renderIngredients(body) {
     $("div.navigation").empty();
     $("div.tablecontrols").empty();
@@ -141,6 +177,9 @@ function renderIngredients(body) {
     );
     let tbody = $(".resulttable tbody");
     tbody.empty();
+    body.items.forEach(function (item) {
+        tbody.append(ingredientRow(item));
+    });
     renderIngredientForm(body["@controls"]["ingredients:add-ingredient"]);
 }
 
