@@ -352,6 +352,7 @@ class RecipeCollection(Resource):
                 ingredient=all_recipes[recipe_count].ingredient
             )
             recipe_item.add_control("self", api.url_for(RecipeItem, recipe=all_recipes[recipe_count]))
+            recipe_item.add_control("delete", api.url_for(RecipeItem, recipe=all_recipes[recipe_count]))
             recipe_item.add_control("profile", RECIPE_PROFILE)
             body["items"].append(recipe_item)
 

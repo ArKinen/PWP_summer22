@@ -28,12 +28,18 @@ function recipeRow(item) {
     let ingredient_link = "<a href='" +
                 item["@controls"].self.href +
                 "' onClick='followLink(event, this, renderIngredient)'>show</a>";
-
+/*
+    let delete_link = "<a href='" +
+                item["@controls"].delete.href +
+                "' onClick='followLink(event, this, removeRecipeRow)'>delete</a>";
+ */
 
     return "<tr><td>" + item.title +
             "</td><td>" + item.course +
             "</td><td>" + item.ingredient +
             "</td><td>" + ingredient_link +"</td></tr>";
+            //"</td><td>" + delete_link +
+            //"</td></tr>";
 }
 
 function ingredientRow(item) {
@@ -48,6 +54,10 @@ function ingredientRow(item) {
 
 function appendRecipeRow(body) {
     $(".resulttable tbody").append(recipeRow(body));
+}
+
+function removeRecipeRow(body) {
+    $(".resulttable tbody").remove(recipeRow(body));
 }
 
 function appendIngredientRow(body) {
