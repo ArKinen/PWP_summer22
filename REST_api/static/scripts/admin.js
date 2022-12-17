@@ -24,14 +24,16 @@ function renderMsg(msg) {
 }
 
 function recipeRow(item) {
-    let link = "<a href='" +
+
+    let ingredient_link = "<a href='" +
                 item["@controls"].self.href +
-                "' onClick='followLink(event, this, renderRecipe)'>show</a>";
+                "' onClick='followLink(event, this, renderIngredient)'>show</a>";
+
 
     return "<tr><td>" + item.title +
             "</td><td>" + item.course +
             "</td><td>" + item.ingredient +
-            "</td><td>" + link + "</td></tr>";
+            "</td><td>" + ingredient_link +"</td></tr>";
 }
 
 function ingredientRow(item) {
@@ -90,26 +92,7 @@ function submitIngredient(event) {
     sendData(form.attr("action"), form.attr("method"), data, getSubmittedIngredient);
 }
 
-function renderRecipe(body) {
-    $("div.navigation")
-        .html(
-        "<a href='" +
-        body["@controls"]["recipe:recipes"].href +
-        "' onClick='followLink(event, this, renderRecipes)'>Collection</a>"
-        )
 
-    $("div.tablecontrols").empty()
-
-    $(".resulttable thead").html(
-        "<tr><th>Name</th><th>Amount</th><th>Compartment</th></tr>"
-    );
-    let tbody = $(".resulttable tbody");
-    tbody.empty();
-
-    body.items.forEach(function (item) {
-        tbody.append(ingredientRow(item));
-    });
-}
 
 function renderRecipes(body) {
     $("div.navigation").empty();
@@ -149,6 +132,7 @@ function renderRecipeForm(ctrl) {
 }
 
 function renderIngredient(body) {
+
     $("div.navigation")
         .html(
         "<a href='" +
@@ -170,7 +154,15 @@ function renderIngredient(body) {
 }
 
 function renderIngredients(body) {
-    $("div.navigation").empty();
+
+    $("div.navigation")
+        .html(
+        "<a href='" +
+        body["@controls"]["up"].href +
+        "' onClick='followLink(event, this, renderRecipes)'>Collection</a>"
+        )
+
+    //$("div.navigation").empty();
     $("div.tablecontrols").empty();
     $(".resulttable thead").html(
         "<tr><th>Add ingredient</th></tr>"

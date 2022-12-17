@@ -486,6 +486,7 @@ class IngredientCollection(Resource):
         body.add_namespace("recipe", LINK_RELATIONS_URL)
         body.add_control("self", api.url_for(IngredientCollection))
         body.add_control_add_ingredient()
+        body.add_control("up", api.url_for(RecipeCollection))
 
         for [ingredient_count, _] in enumerate(all_ingredients):
             ingredient_item = RecipeBuilder(
