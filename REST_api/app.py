@@ -56,7 +56,7 @@ class Recipe(db.Model):
     ingredient = db.Column(db.String(160), nullable=True, unique=True)
     compartments = db.relationship("Compartment", secondary=recipes, back_populates="recipes")
     course = db.relationship("Recipecategory", back_populates="recipes")
-    course_id = db.Column(db.Integer, db.ForeignKey("recipecategory.id"), unique=False)
+    course_id = db.Column(db.Integer, db.ForeignKey("recipecategory.id", ondelete="SET NULL"), unique=False)
 
     def deserialize(self, doc):
         self.title = doc.get("title")
@@ -104,7 +104,7 @@ class Ingredient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(16), nullable=False)
     amount = db.Column(db.Integer, nullable=True)
-    compartment_id = db.Column(db.Integer, db.ForeignKey("compartment.id"), unique=False)
+    compartment_id = db.Column(db.Integer, db.ForeignKey("compartment.id", ondelete="SET NULL"), unique=False)
     compartments = db.relationship("Compartment", back_populates="ingredients")
 
     def deserialize(self, doc):
@@ -278,6 +278,22 @@ class RecipeBuilder(MasonBuilder):
             schema=self._recipe_schema()
         )
 
+    def add_control_delete_recipe(self, recipe):
+        self.add_control(
+            "recipe:delete",
+            api.url_for(RecipeItem, recipe=recipe),
+            method="DELETE",
+            title="Delete this recipe"
+        )
+
+    def add_control_delete_ingredient(self, ingredient):
+        self.add_control(
+            "ingredient:delete",
+            api.url_for(IngredientItem, ingredient=ingredient),
+            method="DELETE",
+            title="Delete this ingredient"
+        )
+
     @staticmethod
     def _recipe_schema():
         schema = {
@@ -388,7 +404,8 @@ class RecipeItem(Resource):
         body = RecipeBuilder(
             title=db_recipe.title,
             course=db_recipe.course.course_type,
-            ingredient=db_recipe.ingredient
+            ingredient=db_recipe.ingredient,
+            items=[]
         )
 
         body.add_namespace("recipe", LINK_RELATIONS_URL)
@@ -396,15 +413,17 @@ class RecipeItem(Resource):
         body.add_control("profile", RECIPE_PROFILE)
         body.add_control("collection", api.url_for(RecipeCollection))
         body.add_control_edit_recipe(recipe)
+        body.add_control_delete_recipe(recipe)
         body.add_control_get_ingredients(db_recipe.ingredient)
+
         if db_recipe.ingredient != None:
-            body = RecipeBuilder(
-                items=[]
-            )
             parsed_ingredients = db_recipe.ingredient.split(",")
             for index in range(0, len(parsed_ingredients)):
-                db_ingredients = Ingredient.query.filter_by(name=parsed_ingredients[index]).first()
-                db_compartments = Compartment.query.filter_by(id=db_ingredients.compartment_id).first()
+                try:
+                    db_ingredients = Ingredient.query.filter_by(name=parsed_ingredients[index]).first()
+                    db_compartments = Compartment.query.filter_by(id=db_ingredients.compartment_id).first()
+                except:
+                    break
 
                 ingredient_item = RecipeBuilder(
                     name=db_ingredients.name,
@@ -444,6 +463,16 @@ class RecipeItem(Resource):
                     **request.json
                 )
             )
+        return Response(status=204)
+
+    def delete(self, recipe):
+        db_recipe = Recipe.query.filter_by(title=recipe.title).first()
+        if db_recipe is None:
+            return Response(status=404)
+
+        db.session.delete(db_recipe)
+        db.session.commit()
+
         return Response(status=204)
 
 
@@ -529,6 +558,7 @@ class IngredientItem(Resource):
         body.add_control("collection", api.url_for(IngredientCollection))
         body.add_control_edit_ingredient(ingredient)
         body.add_control_get_ingredients(ingredient)
+        body.add_control_delete_ingredient(ingredient)
 
         if db_ingredient is None:
             raise NotFound
@@ -554,6 +584,16 @@ class IngredientItem(Resource):
                     **request.json
                 )
             )
+        return Response(status=204)
+
+    def delete(self, ingredient):
+        db_ingredient = Ingredient.query.filter_by(name=ingredient.name).first()
+        if db_ingredient is None:
+            return Response(status=404)
+
+        db.session.delete(db_ingredient)
+        db.session.commit()
+
         return Response(status=204)
 
 
@@ -739,6 +779,8 @@ def handle_exception(e):
         response = "Failed to commit", e.description
     if e.code == 415:
         response = "Request content must be JSON", e.code
+    if e.code == 500:
+        response = "Internal server error", e.description
     return response
 
 
