@@ -43,13 +43,14 @@ function recipeRow(item) {
 }
 
 function ingredientRow(item) {
-    let link = "<a href='" +
-                item["@controls"].self.href + "'/a>";
+    let delete_link = "<a href='" +
+                item["@controls"]["ingredient:delete"].href +
+                "' onClick='followLink(event, this, removeIngredientRow)'>delete</a>";
 
     return "<tr><td>" + item.name +
             "</td><td>" + item.amount +
-            "</td><td>" + item.compartment_id +
-            "</td><td>" + link + "</td></tr>";
+            "</td><td>" + item.compartment_id +//"</td></tr>";
+            "</td><td>" + delete_link + "</td></tr>";
 }
 
 function appendRecipeRow(body) {
@@ -68,7 +69,17 @@ function removeRecipeRow(body) {
     //$(".resulttable tbody").items
 }
 
+function removeIngredientRow(body) {
+    //console.log(JSON.stringify(body))
+    sendData(body["@controls"]["ingredient:delete"].href, body["@controls"]["ingredient:delete"].method, body, handleDeletedIngredient)
+}
+
 function handleDeletedRecipe(data, status, jqxhr) {
+    renderMsg("Succesful");
+    //let href = jqxhr.getResponseHeader("Location")
+}
+
+function handleDeletedIngredient(data, status, jqxhr) {
     renderMsg("Succesful");
     //let href = jqxhr.getResponseHeader("Location")
 }

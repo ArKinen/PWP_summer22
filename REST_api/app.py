@@ -433,6 +433,7 @@ class RecipeItem(Resource):
                 )
                 uri = api.url_for(IngredientItem, ingredient=db_ingredients)
                 ingredient_item.add_control("self", uri)
+                ingredient_item.add_control_delete_ingredient(db_ingredients)
                 body["items"].append(ingredient_item)
 
             body.add_control_get_recipes(recipe)
@@ -497,6 +498,7 @@ class IngredientCollection(Resource):
             )
             uri = api.url_for(IngredientItem, ingredient=all_ingredients[ingredient_count])
             ingredient_item.add_control("self", uri)
+            ingredient_item.add_control_delete_ingredient(all_ingredients[ingredient_count])
             body["items"].append(ingredient_item)
 
         return Response(json.dumps(body), 200, mimetype=MASON)
