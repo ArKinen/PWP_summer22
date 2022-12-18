@@ -29,6 +29,11 @@ function recipeRow(item) {
                 item["@controls"].self.href +
                 "' onClick='followLink(event, this, renderIngredient)'>show</a>";
 
+    //console.log(item["@controls"])
+    let edit_link = "<a href='" +
+                item["@controls"].edit.href +
+                "' onClick='followLink(event, this, renderEditRecipes)'>edit</a>";
+
     let delete_link = "<a href='" +
                 item["@controls"]["recipe:delete"].href +
                 "' onClick='followLink(event, this, removeRecipeRow)'>delete</a>";
@@ -37,7 +42,8 @@ function recipeRow(item) {
     return "<tr><td>" + item.title +
             "</td><td>" + item.course +
             "</td><td>" + item.ingredient +
-            "</td><td>" + ingredient_link +//"</td></tr>";
+            "</td><td>" + ingredient_link +
+            "</td><td>" + edit_link +
             "</td><td>" + delete_link +
             "</td></tr>";
 }
@@ -49,7 +55,7 @@ function ingredientRow(item) {
 
     return "<tr><td>" + item.name +
             "</td><td>" + item.amount +
-            "</td><td>" + item.compartment_id +//"</td></tr>";
+            "</td><td>" + item.compartment_id +
             "</td><td>" + delete_link + "</td></tr>";
 }
 
@@ -57,31 +63,29 @@ function appendRecipeRow(body) {
     $(".resulttable tbody").append(recipeRow(body));
 }
 
+function editRecipeRow(body) {
+    console.log("editRecipeRow" + JSON.stringify(body["@controls"].edit))
+    sendData(body["@controls"].edit.href, body["@controls"].edit.method, body, handleEditRecipe)
+}
+
 function removeRecipeRow(body) {
-    console.log(JSON.stringify(body["@controls"]["recipe:delete"]))
     sendData(body["@controls"]["recipe:delete"].href, body["@controls"]["recipe:delete"].method, body, handleDeletedRecipe)
-
-    //console.log("resulttable tbody" + JSON.stringify($(".resulttable tbody")))
-    //body.items.forEach(function (item) {
-    //    console.log("body item" + JSON.stringify(item))
-    //});
-
-    //$(".resulttable tbody").items
 }
 
 function removeIngredientRow(body) {
-    //console.log(JSON.stringify(body))
     sendData(body["@controls"]["ingredient:delete"].href, body["@controls"]["ingredient:delete"].method, body, handleDeletedIngredient)
+}
+
+function handleEditRecipe(data, status, jqxhr) {
+    renderMsg("Succesful")
 }
 
 function handleDeletedRecipe(data, status, jqxhr) {
     renderMsg("Succesful");
-    //let href = jqxhr.getResponseHeader("Location")
 }
 
 function handleDeletedIngredient(data, status, jqxhr) {
     renderMsg("Succesful");
-    //let href = jqxhr.getResponseHeader("Location")
 }
 
 
@@ -127,8 +131,6 @@ function submitIngredient(event) {
     sendData(form.attr("action"), form.attr("method"), data, getSubmittedIngredient);
 }
 
-
-
 function renderRecipes(body) {
     $("div.navigation").empty();
     $("div.tablecontrols").empty();
@@ -143,7 +145,48 @@ function renderRecipes(body) {
     renderRecipeForm(body["@controls"]["recipe:add-recipe"]);
 }
 
+function renderEditRecipes(body) {
+
+    $("div.navigation")
+        .html(
+        "<a href='" +
+        body["@controls"].collection.href +
+        "' onClick='followLink(event, this, renderRecipes)'>Collection</a>"
+        )
+    $("div.tablecontrols").empty();
+    $(".resulttable thead").html(
+        "<tr><th>Edit ingredient</th></tr>"
+    );
+    let tbody = $(".resulttable tbody");
+    tbody.empty();
+
+    renderEditRecipeForm(body["@controls"].edit);
+}
+
 function renderRecipeForm(ctrl) {
+    let form = $("<form>");
+    let title = ctrl.schema.properties.title;
+    let course = ctrl.schema.properties.course;
+    let ingredient = ctrl.schema.properties.ingredient;
+
+    form.attr("action", ctrl.href);
+    form.attr("method", ctrl.method);
+    form.submit(submitRecipe);
+    form.append("<label>" + title.description + "</label>");
+    form.append("<input type='text' name='title'>");
+    form.append("<label>" + course.description + "</label>");
+    form.append("<input type='text' name='course'>");
+    form.append("<label>" + ingredient.description + "</label>");
+    form.append("<input type='text' name='ingredient'>");
+
+    ctrl.schema.required.forEach(function (property) {
+        $("input[name='" + property + "']").attr("required", true);
+    });
+    form.append("<input type='submit' name='submit' value='Submit'>");
+    $("div.form").html(form);
+}
+
+function renderEditRecipeForm(ctrl) {
     let form = $("<form>");
     let title = ctrl.schema.properties.title;
     let course = ctrl.schema.properties.course;

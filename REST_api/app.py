@@ -65,7 +65,7 @@ class Recipe(db.Model):
         recipecategory_load_from_db = Recipecategory.query.all()
         for [_, recipecategories_instance] in enumerate(recipecategory_load_from_db):
 
-            print(recipecategories_instance.course_type)
+            #print(recipecategories_instance.course_type)
             if doc.get("course") in recipecategories_instance.course_type:
                 self.course = recipecategories_instance
 
@@ -245,7 +245,7 @@ class RecipeBuilder(MasonBuilder):
             method="PUT",
             encoding="json",
             title="Edit this sensor",
-            schema=Ingredient.json_schema()
+            schema=Recipe.json_schema()
         )
 
     def add_control_add_ingredient(self):
@@ -351,6 +351,7 @@ class RecipeCollection(Resource):
                 course=all_recipes[recipe_count].course.course_type,
                 ingredient=all_recipes[recipe_count].ingredient
             )
+            recipe_item.add_control_edit_recipe(all_recipes[recipe_count])
             recipe_item.add_control("self", api.url_for(RecipeItem, recipe=all_recipes[recipe_count]))
             recipe_item.add_control_delete_recipe(all_recipes[recipe_count])
             recipe_item.add_control("profile", RECIPE_PROFILE)
