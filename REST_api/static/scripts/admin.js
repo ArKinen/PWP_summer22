@@ -29,7 +29,6 @@ function recipeRow(item) {
                 item["@controls"].self.href +
                 "' onClick='followLink(event, this, renderIngredient)'>show</a>";
 
-    //console.log(item["@controls"])
     let edit_link = "<a href='" +
                 item["@controls"].edit.href +
                 "' onClick='followLink(event, this, renderEditRecipes)'>edit</a>";
@@ -48,49 +47,24 @@ function recipeRow(item) {
             "</td></tr>";
 }
 
-function ingredientRow(item) {
-    let delete_link = "<a href='" +
-                item["@controls"]["ingredient:delete"].href +
-                "' onClick='followLink(event, this, removeIngredientRow)'>delete</a>";
-
-    return "<tr><td>" + item.name +
-            "</td><td>" + item.amount +
-            "</td><td>" + item.compartment_id +
-            "</td><td>" + delete_link + "</td></tr>";
-}
-
 function appendRecipeRow(body) {
     $(".resulttable tbody").append(recipeRow(body));
 }
 
 function editRecipeRow(body) {
-    console.log("editRecipeRow" + JSON.stringify(body["@controls"].edit))
     sendData(body["@controls"].edit.href, body["@controls"].edit.method, body, handleEditRecipe)
-}
-
-function removeRecipeRow(body) {
-    sendData(body["@controls"]["recipe:delete"].href, body["@controls"]["recipe:delete"].method, body, handleDeletedRecipe)
-}
-
-function removeIngredientRow(body) {
-    sendData(body["@controls"]["ingredient:delete"].href, body["@controls"]["ingredient:delete"].method, body, handleDeletedIngredient)
 }
 
 function handleEditRecipe(data, status, jqxhr) {
     renderMsg("Succesful")
 }
 
+function removeRecipeRow(body) {
+    sendData(body["@controls"]["recipe:delete"].href, body["@controls"]["recipe:delete"].method, body, handleDeletedRecipe)
+}
+
 function handleDeletedRecipe(data, status, jqxhr) {
     renderMsg("Succesful");
-}
-
-function handleDeletedIngredient(data, status, jqxhr) {
-    renderMsg("Succesful");
-}
-
-
-function appendIngredientRow(body) {
-    $(".resulttable tbody").append(ingredientRow(body));
 }
 
 function getSubmittedRecipe(data, status, jqxhr) {
@@ -98,14 +72,6 @@ function getSubmittedRecipe(data, status, jqxhr) {
     let href = jqxhr.getResponseHeader("Location");
     if (href) {
         getResource(href, appendRecipeRow);
-    }
-}
-
-function getSubmittedIngredient(data, status, jqxhr) {
-    renderMsg("Successful");
-    let href = jqxhr.getResponseHeader("Location");
-    if (href) {
-        getResource(href, appendIngredientRow);
     }
 }
 
@@ -118,17 +84,6 @@ function submitRecipe(event) {
     data.course = $("input[name='course']").val();
     data.ingredient = $("input[name='ingredient']").val();
     sendData(form.attr("action"), form.attr("method"), data, getSubmittedRecipe);
-}
-
-function submitIngredient(event) {
-    event.preventDefault();
-
-    let data = {};
-    let form = $("div.form form");
-    data.name = $("input[name='name']").val();
-    data.amount = $("input[name='amount']").val();
-    data.compartment = $("input[name='compartment']").val();
-    sendData(form.attr("action"), form.attr("method"), data, getSubmittedIngredient);
 }
 
 function renderRecipes(body) {
@@ -155,7 +110,7 @@ function renderEditRecipes(body) {
         )
     $("div.tablecontrols").empty();
     $(".resulttable thead").html(
-        "<tr><th>Edit ingredient</th></tr>"
+        "<tr><th>Edit recipe</th></tr>"
     );
     let tbody = $(".resulttable tbody");
     tbody.empty();
@@ -209,6 +164,67 @@ function renderEditRecipeForm(ctrl) {
     $("div.form").html(form);
 }
 
+function ingredientRow(item) {
+    let delete_link = "<a href='" +
+                item["@controls"]["ingredient:delete"].href +
+                "' onClick='followLink(event, this, removeIngredientRow)'>delete</a>";
+
+    let edit_link = "<a href='" +
+                item["@controls"].edit.href +
+                "' onClick='followLink(event, this, renderEditIngredients)'>edit</a>";
+
+    return "<tr><td>" + item.name +
+            "</td><td>" + item.amount +
+            "</td><td>" + edit_link +
+            "</td><td>" + delete_link + "</td></tr>";
+}
+
+function appendIngredientRow(body) {
+    $(".resulttable tbody").append(ingredientRow(body));
+}
+
+function removeIngredientRow(body) {
+    sendData(body["@controls"]["ingredient:delete"].href, body["@controls"]["ingredient:delete"].method, body, handleDeletedIngredient)
+}
+
+function handleDeletedIngredient(data, status, jqxhr) {
+    renderMsg("Succesful");
+}
+
+function getSubmittedIngredient(data, status, jqxhr) {
+    renderMsg("Successful");
+    let href = jqxhr.getResponseHeader("Location");
+    if (href) {
+        getResource(href, appendIngredientRow);
+    }
+}
+
+function handleEditSubmittedIngredient(data, status, jqxhr) {
+    renderMsg("Successful");
+}
+
+function submitIngredient(event) {
+    event.preventDefault();
+
+    let data = {};
+    let form = $("div.form form");
+    data.name = $("input[name='name']").val();
+    data.amount = $("input[name='amount']").val();
+    data.compartment = $("input[name='compartment']").val();
+    sendData(form.attr("action"), form.attr("method"), data, getSubmittedIngredient);
+}
+
+function submitEditIngredient(event) {
+    event.preventDefault();
+
+    let data = {};
+    let form = $("div.form form");
+    data.name = $("input[name='name']").val();
+    data.amount = $("input[name='amount']").val();
+    data.compartment = $("input[name='compartment']").val();
+    sendData(form.attr("action"), form.attr("method"), data, handleEditSubmittedIngredient);
+}
+
 function renderIngredient(body) {
 
     $("div.navigation")
@@ -225,7 +241,7 @@ function renderIngredient(body) {
     );
     let tbody = $(".resulttable tbody");
     tbody.empty();
-
+    console.log(JSON.stringify(body))
     body.items.forEach(function (item) {
         tbody.append(ingredientRow(item));
     });
@@ -240,7 +256,6 @@ function renderIngredients(body) {
         "' onClick='followLink(event, this, renderRecipes)'>Collection</a>"
         )
 
-    //$("div.navigation").empty();
     $("div.tablecontrols").empty();
     $(".resulttable thead").html(
         "<tr><th>Add ingredient</th></tr>"
@@ -277,6 +292,41 @@ function renderIngredientForm(ctrl) {
     $("div.form").html(form);
 }
 
+function renderEditIngredients(body) {
+
+    $("div.tablecontrols").empty();
+    $(".resulttable thead").html(
+        "<tr><th>Edit ingredient</th></tr>"
+    );
+    let tbody = $(".resulttable tbody");
+    tbody.empty();
+
+    renderEditIngredientForm(body["@controls"].edit);
+}
+
+function renderEditIngredientForm(ctrl) {
+    let form = $("<form>");
+    let name = ctrl.schema.properties.name;
+    let amount  =ctrl.schema.properties.amount;
+    let compartments = ctrl.schema.properties.compartments;
+
+    form.attr("action", ctrl.href);
+    form.attr("method", ctrl.method);
+    form.submit(submitEditIngredient);
+    form.append("<label>" + name.description + "</label>");
+    form.append("<input type='text' name='name'>");
+    form.append("<label>" + amount.description + "</label>");
+    form.append("<input type='text' name='amount'>");
+    form.append("<label>" + compartments.description + "</label>");
+    form.append("<input type='text' name='compartment'>");
+
+    ctrl.schema.required.forEach(function (property) {
+        $("input[name='" + property + "']").attr("required", true);
+    });
+    form.append("<input type='submit' name='submit' value='Submit'>");
+    $("div.form").html(form);
+}
+
 function sendData(href, method, item, postProcessor) {
     $.ajax({
         url: href,
@@ -291,5 +341,4 @@ function sendData(href, method, item, postProcessor) {
 
 $(document).ready(function () {
     getResource("http://localhost:5000/api/recipes/", renderRecipes);
-    //getResource("http://localhost:5000/api/ingredients/", renderIngredients);
 });

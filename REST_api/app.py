@@ -433,6 +433,8 @@ class RecipeItem(Resource):
                     compartment_name=db_compartments.name
                 )
                 uri = api.url_for(IngredientItem, ingredient=db_ingredients)
+                ingredient_item.add_control("collection", api.url_for(RecipeCollection))
+                ingredient_item.add_control_edit_ingredient(db_ingredients)
                 ingredient_item.add_control("self", uri)
                 ingredient_item.add_control_delete_ingredient(db_ingredients)
                 body["items"].append(ingredient_item)
@@ -498,6 +500,8 @@ class IngredientCollection(Resource):
                 compartment_id=all_ingredients[ingredient_count].compartment_id
             )
             uri = api.url_for(IngredientItem, ingredient=all_ingredients[ingredient_count])
+            ingredient_item.add_control("collection", api.url_for(RecipeCollection))
+            ingredient_item.add_control_edit_ingredient(all_ingredients[ingredient_count])
             ingredient_item.add_control("self", uri)
             ingredient_item.add_control_delete_ingredient(all_ingredients[ingredient_count])
             body["items"].append(ingredient_item)
