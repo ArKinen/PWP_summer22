@@ -90,6 +90,7 @@ function renderRecipes(body) {
     $("div.navigation").empty();
     $("div.tablecontrols").empty();
     $(".resulttable thead").html(
+        "<h2>WhatShouldWeEatToday</h2>"+ "<th></th>" +
         "<tr><th>Title</th><th>Course</th><th>Ingredient</th></tr>"
     );
     let tbody = $(".resulttable tbody");
@@ -110,7 +111,7 @@ function renderEditRecipes(body) {
         )
     $("div.tablecontrols").empty();
     $(".resulttable thead").html(
-        "<tr><th>Edit recipe</th></tr>"
+        "<tr><th><h2>Edit recipe</h2></th></tr>"
     );
     let tbody = $(".resulttable tbody");
     tbody.empty();
@@ -127,6 +128,8 @@ function renderRecipeForm(ctrl) {
     form.attr("action", ctrl.href);
     form.attr("method", ctrl.method);
     form.submit(submitRecipe);
+
+    form.append("<label>" + "<h2>Add recipe</h2>" + "</label>" + "<tr></tr>")
     form.append("<label>" + title.description + "</label>");
     form.append("<input type='text' name='title'>");
     form.append("<label>" + course.description + "</label>");
@@ -233,15 +236,17 @@ function renderIngredient(body) {
         body["@controls"]["ingredient:ingredients"].href +
         "' onClick='followLink(event, this, renderIngredients)'>Ingredients</a>"
         )
-
+    console.log(body)
+    let title = body.title
     $("div.tablecontrols").empty()
-
+    $("div.form").empty()
     $(".resulttable thead").html(
-        "<tr><th>Name</th><th>Amount</th><th>Compartment</th></tr>"
+        "<h2>" + title + "</h2>" +
+        "<tr><th>Name</th><th>Amount</th></tr>"
     );
     let tbody = $(".resulttable tbody");
     tbody.empty();
-    console.log(JSON.stringify(body))
+
     body.items.forEach(function (item) {
         tbody.append(ingredientRow(item));
     });
@@ -258,7 +263,7 @@ function renderIngredients(body) {
 
     $("div.tablecontrols").empty();
     $(".resulttable thead").html(
-        "<tr><th>Add ingredient</th></tr>"
+        "<tr><th>Name</th><th>Amount</th></tr>"
     );
     let tbody = $(".resulttable tbody");
     tbody.empty();
@@ -278,6 +283,7 @@ function renderIngredientForm(ctrl) {
     form.attr("action", ctrl.href);
     form.attr("method", ctrl.method);
     form.submit(submitIngredient);
+    form.append("<label>" + "<h2>Add ingredient</h2>" + "</label>" + "<tr></tr>")
     form.append("<label>" + name.description + "</label>");
     form.append("<input type='text' name='name'>");
     form.append("<label>" + amount.description + "</label>");
@@ -296,7 +302,7 @@ function renderEditIngredients(body) {
 
     $("div.tablecontrols").empty();
     $(".resulttable thead").html(
-        "<tr><th>Edit ingredient</th></tr>"
+        "<tr><th><h2>Edit ingredient</h2></th></tr>"
     );
     let tbody = $(".resulttable tbody");
     tbody.empty();
