@@ -278,7 +278,7 @@ function renderIngredientForm(ctrl) {
     let form = $("<form>");
     let name = ctrl.schema.properties.name;
     let amount  =ctrl.schema.properties.amount;
-    let compartments = ctrl.schema.properties.compartments;
+    let compartment = ctrl.schema.properties.compartment;
 
     form.attr("action", ctrl.href);
     form.attr("method", ctrl.method);
@@ -288,7 +288,7 @@ function renderIngredientForm(ctrl) {
     form.append("<input type='text' name='name'>");
     form.append("<label>" + amount.description + "</label>");
     form.append("<input type='text' name='amount'>");
-    form.append("<label>" + compartments.description + "</label>");
+    form.append("<label>" + compartment.description + "</label>");
     form.append("<input type='text' name='compartment'>");
 
     ctrl.schema.required.forEach(function (property) {
@@ -314,7 +314,7 @@ function renderEditIngredientForm(ctrl) {
     let form = $("<form>");
     let name = ctrl.schema.properties.name;
     let amount  =ctrl.schema.properties.amount;
-    let compartments = ctrl.schema.properties.compartments;
+    let compartment = ctrl.schema.properties.compartment;
 
     form.attr("action", ctrl.href);
     form.attr("method", ctrl.method);
@@ -323,7 +323,7 @@ function renderEditIngredientForm(ctrl) {
     form.append("<input type='text' name='name'>");
     form.append("<label>" + amount.description + "</label>");
     form.append("<input type='text' name='amount'>");
-    form.append("<label>" + compartments.description + "</label>");
+    form.append("<label>" + compartment.description + "</label>");
     form.append("<input type='text' name='compartment'>");
 
     ctrl.schema.required.forEach(function (property) {

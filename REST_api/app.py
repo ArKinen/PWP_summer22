@@ -11,12 +11,19 @@ from werkzeug.exceptions import HTTPException, NotFound, UnsupportedMediaType, B
 from flask_sqlalchemy import SQLAlchemy
 import random
 from jsonschema import validate, ValidationError
+from flasgger import Swagger, swag_from
 
 from werkzeug.routing import BaseConverter
 
 app = Flask(__name__, static_folder="static")
+app.config["SWAGGER"] = {
+    "title": "WhatShouldWeEatToday API",
+    "openapi": "3.0.3",
+    "uiversion": 3,
+}
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+swagger = Swagger(app, template_file="static\\what_should_we_eat_today_hub.yml")
 db = SQLAlchemy(app)
 api = Api(app)
 
@@ -103,7 +110,7 @@ class Compartment(db.Model):
 class Ingredient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(16), nullable=False)
-    amount = db.Column(db.Integer, nullable=True)
+    amount = db.Column(db.String(16), nullable=True)
     compartment_id = db.Column(db.Integer, db.ForeignKey("compartment.id", ondelete="SET NULL"), unique=False)
     compartments = db.relationship("Compartment", back_populates="ingredients")
 
@@ -131,7 +138,7 @@ class Ingredient(db.Model):
             "description": "Ingredient amount",
             "type": "string"
         }
-        props["compartments"] = {
+        props["compartment"] = {
             "description": "Compartment name",
             "type": "string"
         }
@@ -514,8 +521,8 @@ class IngredientCollection(Resource):
 
         try:
             validate(request.json, Ingredient.json_schema())
-        except ValidationError:
-            return Response(status=400)
+        except ValidationError as e:
+            raise BadRequest(description=str(e))
 
         db_compartments = Compartment.query.filter_by(name=request.json["compartment"]).first()
 
@@ -736,7 +743,7 @@ def input_ingredient(_recipe_ingredients):
     for count, ingredient in enumerate(_recipe_ingredients):
         ingredient_model = Ingredient(
             name=str(ingredient),
-            amount=random.randint(0, 9),
+            amount=str(random.randint(0, 9)),
             compartments=compartments_load_from_db[random.randint(0, 3)]
         )
 

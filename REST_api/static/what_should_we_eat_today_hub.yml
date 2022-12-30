@@ -1,0 +1,240 @@
+openapi: 3.0.3
+info:
+  title: What Should We Eat Today Swagger
+  version: 0.0.1
+  description: |
+    This is an API example used in the Programmable Web Project course.
+    It stores data about recipes and ingredients.
+  termsOfService: http://totally.not.placehold.er/
+  contact:
+    url: http://totally.not.placehold.er/
+    email: mihamaki2@student.oulu.fi, akinos@sutdent.oulu.fi
+    name: Mika Ihamäki, Arto Kinos
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- url: /api
+paths:
+  /recipes/:
+    get:
+      description: Get the collection of recipes
+      responses:
+        '200':
+          description: List of recipes
+          content:
+            application/json:
+              example:
+              - title: Ice-cream
+                ingredient: Cream, Chocolate, Vanilla_ice-cream
+                course: Dessert
+              - title: Bean_spaghetti
+                ingredient: Salad, Beans, Spaghetti
+                course: Main
+    post:
+      description: Create a new recipe
+      responses:
+        '201':
+          description: The recipe was created successfully
+          headers:
+            Location:
+              description: URI of the new recipe
+              schema:
+                type: string
+        '400':
+          description: Title, ingredient and course must be strings
+        '409':
+          description: Recipe already exists
+        '415':
+          description: Request content type must be JSON
+      requestBody:
+        description: JSON document that contains basic data for a recipe
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Recipe'
+            example:
+              title: test-recipe-1
+              ingredient: test1, test2, test3
+              course: Main
+  /recipes/{recipe}/:
+    parameters:
+      - $ref: '#/components/parameters/recipe'
+    get:
+      description: Get details of one recipe
+      responses:
+        '201':
+          description: Ingredients of the recipe
+          content:
+            application/json:
+              examples:
+                existing-recipe:
+                  description: Existing recipe that has been created previously
+                  value:
+                    title: test-recipe-1
+                    course: Main
+                    ingredient: test1, test2, test3
+    put:
+      description: Modify details of one recipe
+      responses:
+        '204':
+          description: Edit properties of the recipe
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Recipe'
+            example:
+              title: test-recipe-1
+              ingredient: test1, test2, test3
+              course: Main
+    delete:
+      description: Delete one recipe
+      responses:
+        '204':
+          description: Ingredients of the recipe
+          content:
+            application/json:
+              examples:
+                existing-recipe:
+                  description: Existing recipe that has been created previously
+        '404':
+          description: The product was not found
+  /ingredients/:
+    get:
+      description: Get the collection of ingredients
+      responses:
+        '200':
+          description: List of ingredients
+          content:
+            application/json:
+              example:
+                - name: Ice-cream
+                  amount: 3
+                  compartment_id: 1
+                - name: Bean
+                  amount: 4
+                  compartment_id: 1
+    post:
+      description: Create a new ingredient
+      responses:
+        '201':
+          description: The ingredient was created successfully
+          headers:
+            Location:
+              description: URI of the new ingredient
+              schema:
+                type: string
+        '400':
+          description: Name, compartment and amount should be string
+        '409':
+          description: Ingredient already exists
+        '415':
+          description: Request content type must be JSON
+      requestBody:
+        description: JSON document that contains basic data for a ingredient
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ingredient'
+            example:
+              name: Minced_meat
+              amount: "5"
+              compartment: Mixed
+  /ingredients/{ingredient}/:
+    parameters:
+      - $ref: '#/components/parameters/ingredient'
+    get:
+      description: Get details of one ingredient
+      responses:
+        '201':
+          description: Information about the ingredient
+          content:
+            application/json:
+              examples:
+                existing-recipe:
+                  description: Existing ingredient that has been created previously
+                  value:
+                    name: Chicken_leg
+                    amount: "4"
+                    compartment: Mixed
+    put:
+      description: Modify details of one ingredient
+      responses:
+        '204':
+          description: Edit properties of the ingredient
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Ingredient'
+            example:
+              name: Salad
+              amount: "55"
+              compartment: Veggies
+    delete:
+      description: Delete one ingredient
+      responses:
+        '204':
+          description: Information about the ingredient
+          content:
+            application/json:
+              examples:
+                existing-recipe:
+                  description: Existing ingredient that has been created previously
+        '404':
+          description: The ingredient was not found
+components:
+  schemas:
+    Recipe:
+      type: object
+      properties:
+        title:
+          description: Title of the recipe
+          type: string
+        ingredient:
+          description: ingredients separated by comma
+          type: string
+        course:
+          description: course type (Starter, Main, Dessert)
+          type: string
+      required:
+      - title
+      - ingredient
+      - course
+    Ingredient:
+      type: object
+      properties:
+        name:
+          description: Name of the ingredient
+          type: string
+        amount:
+          description: Amount of ingredients
+          type: string
+        compartment:
+          description: Compartment (Veggies, Mixed..)
+          type: string
+      required:
+        - name
+        - amount
+        - compartment
+  parameters:
+    recipe:
+      description: Chosen recipe's title
+      in: path
+      name: recipe
+      required: true
+      schema:
+        type: string
+    ingredient:
+      description: Chosen recipe's title
+      in: path
+      name: ingredient
+      required: true
+      schema:
+        type: string
+  securitySchemes:
+      recipeKey:
+        type: apiKey
+        name: recipe-Api-Key
+        in: header
